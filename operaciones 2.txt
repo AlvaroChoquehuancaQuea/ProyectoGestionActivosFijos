@@ -1,0 +1,29 @@
+incoroparacion y registro de activo fijo							
+							
+descripcion	marca	modelo	estado	fecha de incorporacion	costo inicial	foto	años de vida util
+minibus	toyota	1996	bueno	20/6/2024	70000		5 años
+	
+determinacion del costos de activo fijo para estados financieros									
+									
+descripcion	marca	modelo	estado	fecha de incorporacion	costo inicial	factor de actualizacion	costos actuzalizado	Deprecion acumulada	valor neto
+minibus	toyota	1996	bueno	20/6/2024	70000	1.000006	70000.42	14000.084	56000.34
+
+
+
+acta de asignacion de activo fijo										
+										
+descripcion	marca	modelo	estado	fecha de incorporacion	nombre del funcionario	cargo	nombre Jefe de activos fijos	cargo	codigo ded barras	
+minibus	toyota	1996	bueno	20/6/2024	pedrito	gerente	alvaro	jefe de activos fijos		
+						recibe	entrega			
+
+acta de reasignacion de  activo fijo										
+										
+descripcion	marca	modelo	estado	fecha de incorporacion	nombre del funcionario	cargo	nombre Jefe de activos fijos	cargo	codigo ded barras	
+minibus	toyota	1996	bueno	20/6/2024	pedrito	gerente	alvaro	jefe de activos fijos		
+
+codigo de barraas o qr
+
+						recibe	entrega			
+
+
+5.6e

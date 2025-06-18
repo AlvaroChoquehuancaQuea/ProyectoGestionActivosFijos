@@ -1,0 +1,19 @@
+El revalorizador de vehiculos automotores tienes estos campos
+descripcion
+modelo
+marca imagen estado
+costo
+fecha de incorporacion
+cantidad 
+existencia fisica 
+procedencia
+valor residual 
+años de vida
+cargo
+nombre y apellido
+factor acualizado
+costo actualizado
+depreciacion acumulada inicial
+depreccicion acumulado actuzalizado
+totoal depreciacion  acumulada
+valor neto 

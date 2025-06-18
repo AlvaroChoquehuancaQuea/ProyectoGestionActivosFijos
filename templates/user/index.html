@@ -1,0 +1,18 @@
+{% extends 'base2.html' %}
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<h1>Bienvenido a la App</h1>
+<h1>Ventas</h1>
+{% if current_user.is_authenticated %}
+
+
+    <p>Hola, {{ current_user.username }}. Ya iniciaste sesión.</p>
+    <a href="{{ url_for('user.logout') }}" class="btn btn-danger">Cerrar Sesión</a>
+    <a href="{{ url_for('usuario.index') }}" class="btn btn-info">Ir al Panel</a>
+{% else %}
+    <a href="{{ url_for('user.register') }}" class="btn btn-primary">Registrarse</a>
+    <a href="{{ url_for('user.login') }}" class="btn btn-success">Iniciar Sesión</a>
+{% endif %}
+
+{% endblock %}

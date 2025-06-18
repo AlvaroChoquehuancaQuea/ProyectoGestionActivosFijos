@@ -1,0 +1,9 @@
+pip install flask
+pip install flask-sqlalchemy
+pip install reportlab
+
+pip install flask-login
+pip install Werkzeug 
+
+
+installar en visual estudio sqliteviewer

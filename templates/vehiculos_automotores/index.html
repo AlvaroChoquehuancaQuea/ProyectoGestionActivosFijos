@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% block title %}Vehículos{% endblock %}
+
+{% block content %}
+<div id="success-message"
+    style="background-color: #ffffff; color: #4b4d4b; padding: 10px; margin-top: 10px; border-radius: 5px; display: none;">
+    Inicio de sesión exitoso
+</div>
+
+<div style=" font-size: 16px; color: #020202; line-height: 2.2;">
+    <div><strong>Nombre:</strong> {{ current_user.name }}</div>
+    <div><strong>Usuario:</strong> {{ current_user.username }}</div>
+    <div><strong>Email:</strong> {{ current_user.email }}</div>
+    <a style="background-color: red; border-radius: 1rem;" href="{{ url_for('user.logout') }}"
+        class="btn btn-primary">Cerrar Sesión</a>
+
+</div>
+<!-- Mensaje temporal -->
+
+<script>
+    // Mostrar el mensaje
+    const msg = document.getElementById('success-message');
+    msg.style.display = 'block';
+
+    // Ocultar después de 2 segundos (2000 ms)
+    setTimeout(() => {
+        msg.style.display = 'none';
+    }, 2000);
+</script>
+<div class="container">
+    <h1 class="my-4">Lista de Vehículos Automotores</h1>
+
+    <!-- Mensaje de impresión -->
+    <div id="mensaje-impresion" class="alert mt-2 d-none">
+        Generando reporte, por favor espere...
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="mb-4 d-flex flex-wrap gap-2">
+        <a href="{{ url_for('vehiculo.create') }}" class="btn btn-primary">
+            <img src="{{ url_for('static', filename='img/mas.png') }}" alt="icono"
+                style="width: 21px; height: 21px; margin-right: 5px;">
+            <i class="fas fa-plus-circle me-1"></i> Nuevo Vehículo
+        </a>
+
+        <!--<a href="{{ url_for('vehiculo.index') }}" class="btn btn-primary">
+               <img src="{{ url_for('static', filename='img/Pbuscar.ico') }}" alt="icono" style="width: 21px; height: 21px; margin-right: 5px;">
+            <i class="fas fa-search me-1"></i> Buscar
+        </a>-->
+        
+        <a href="#" class="btn btn-primary">
+            <i class="fas fa-search me-1"></i> Valor IA
+        </a>
+        <a href="{{ url_for('vehiculo.incorporacion') }}" class="btn btn-info" onclick="mostrarMensaje()">
+            <img src="{{ url_for('static', filename='img/print_2.png') }}" alt="icono">
+            <i class="fas fa-file-pdf me-1"></i> Incorporación
+        </a>
+        <a href="{{ url_for('vehiculo.financiero') }}" class="btn btn-info" onclick="mostrarMensaje()">
+            <img src="{{ url_for('static', filename='img/print_2.png') }}" alt="icono">
+            <i class="fas fa-file-pdf me-1"></i> Costos Financieros
+        </a>
+
+        <!-- <a href="{{ url_for('vehiculo.asignacion') }}" class="btn btn-info" onclick="mostrarMensaje()">
+
+            <i class="fas fa-file-pdf me-1"></i> Asignación Vehiculo
+        </a>-->
+
+        <!-----------------             BOTON DE ASIGNACION        --------------------------------------------->
+        <a href="#" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalAsignacion">
+                <img src="{{ url_for('static', filename='img/C.png') }}" alt="icono"
+                style="width: 27px; height: 27px; margin-right: 5px;">
+            <i class="fas fa-file-pdf me-1"></i> Asignación Vehículo
+        </a>
+        <div class="modal fade" id="modalAsignacion" tabindex="-1" aria-labelledby="modalAsignacionLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('vehiculo.imprimir_asignacion') }}" target="_blank">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Asignar Vehículos</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Nombre del Funcionario</label>
+                                <input type="text" class="form-control" name="funcionario" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Cargo del Funcionario</label>
+                                <input type="text" class="form-control" name="cargo" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Código de Barras</label>
+                                <input type="text" class="form-control" name="codigo_barras">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+
+                            <button type="submit" class="btn btn-primary"> <img
+                                    src="{{ url_for('static', filename='img/print_2.png') }}" alt="icono">Imprimir
+                                Acta</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ------------------------------MODAL DE REASIGNACION --------------------------------->
+        <a href="#" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalReasignacion">
+             <img src="{{ url_for('static', filename='img/C1.png') }}" alt="icono"
+                style="width: 27px; height: 27px; margin-right: 5px;">
+            <i class="fas fa-file-pdf me-1"></i> Reasignación Vehículo
+        </a>
+        <div class="modal fade" id="modalReasignacion" tabindex="-1" aria-labelledby="modalReasignacionLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('vehiculo.imprimir_reasignacion') }}" target="_blank">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Reasignar Vehículos</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Nombre del Funcionario</label>
+                                <input type="text" class="form-control" name="funcionario" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Cargo del Funcionario</label>
+                                <input type="text" class="form-control" name="cargo" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Código de Barras</label>
+                                <input type="text" class="form-control" name="codigo_barras">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Nombre jefe de activos fijos</label>
+                                <input type="text" class="form-control" name="jefe_activos" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Cargo del jefe de activos fijos</label>
+                                <input type="text" class="form-control" name="cargo_jefe" required>
+                            </div>
+
+                        </div>
+                        <div class="modal-footer">
+
+                            <button type="submit" class="btn btn-primary"> <img
+                                    src="{{ url_for('static', filename='img/print_2.png') }}" alt="icono">Imprimir
+                                Acta</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+
+
+
+
+
+        <button id="btn-editar" class="btn btn-warning" disabled>
+            <img src="{{ url_for('static', filename='img/modificar.png') }}" alt="icono"
+                style="width: 27px; height: 27px; margin-right: 5px;">
+
+            <i class="fas fa-edit me-1"></i> Editar
+        </button>
+        <button id="btn-eliminar" class="btn btn-danger" disabled>
+            <img src="{{ url_for('static', filename='img/VElim.png') }}" alt="icono"
+                style="width: 27px; height: 27px; margin-right: 5px;">
+
+            <i class="fas fa-trash me-1"></i> Eliminar
+        </button>
+    </div>
+
+    <!-----------------------------------------------PREDICCION DE VALOR CON IA ---------------------------------------------->
+
+    <h5 class="mt-4">Predicción de Valor IA</h5>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <input type="number" class="form-control" id="anios_prediccion" placeholder="Años a predecir" min="1">
+        </div>
+        <div class="col-md-4">
+            <button type="button" class="btn btn-warning w-100" onclick="predecirValorIA()">Calcular Valor IA</button>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <input type="text" class="form-control" id="valor_neto_calculado" placeholder="Valor IA estimado" readonly>
+        </div>
+        <div class="col-md-4">
+            <button type="button" class="btn btn-success w-100" onclick="asignarValorNeto()">Usar como valor
+                neto</button>
+        </div>
+    </div>
+    <script>
+        function predecirValorIA() {
+            const anios = parseInt(document.getElementById("anios_prediccion").value);
+            const costo = parseFloat(document.querySelector("[name='costo_inicial']").value);
+            const factor = parseFloat(document.querySelector("[name='factor_de_actualizacion']").value);
+
+            if (!isNaN(anios) && anios > 0 && !isNaN(costo) && !isNaN(factor)) {
+                const valorIA = (costo * Math.pow(factor, anios)).toFixed(2);
+                document.getElementById("valor_neto_calculado").value = valorIA;
+            } else {
+                alert("Por favor, ingresa todos los valores correctamente.");
+            }
+        }
+
+        function asignarValorNeto() {
+            const valor = document.getElementById("valor_neto_calculado").value;
+            if (valor !== '') {
+                document.querySelector("[name='valor_residual']").value = valor;
+            }
+        }
+    </script>
+
+
+
+
+
+
+
+
+    <!---------------------------------------------------BARRA DE BUSQUEDA ------------------------------------------>
+    <div class="card mb-4">
+        <div class="card-header  text-black">
+            <h5 class="">Búsqueda</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('vehiculo.index') }}" class="row g-2" onsubmit="limpiarCampos()">
+                <div class="col-md-3">
+                    <input type="text" name="codigo" class="form-control" placeholder="Código"
+                        value="{{ request.args.get('codigo', '') }}">
+                </div>
+                <div class="col-md-4">
+                    <input type="text" name="descripcion" class="form-control" placeholder="Descripción"
+                        value="{{ request.args.get('descripcion', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <input type="date" name="fecha" class="form-control" value="{{ request.args.get('fecha', '') }}">
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-primary" onsubmit="limpiarCampos()">
+                        <img src="{{ url_for('static', filename='img/Pbuscar.ico') }}" alt="icono"
+                            style="width: 21px; height: 21px; margin-right: 5px;">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+                <script>
+                    function limpiarCampos() {
+                        // Pequeño retraso para que se envíe el formulario antes de limpiar
+                        setTimeout(() => {
+                            document.getElementById('codigo').value = '';
+                            document.getElementById('descripcion').value = '';
+                            document.getElementById('fecha').value = '';
+                        }, 100);
+                    }
+                </script>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de vehículos -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle text-center" id="tabla-vehiculos">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Descripción</th>
+                    <th>Marca</th>
+                    <th>Modelo</th>
+                    <th>Estado</th>
+                    <th>Fecha Incorp.</th>
+                    <th>Costo Inicial</th>
+                    <th>Factor Actual.</th>
+                    <th>Costo Actual.</th>
+                    <th>Vida Útil</th>
+                    <th>Deprec. Acum.</th>
+                    <th>Valor Residual</th>
+                    <th>Valor Neto</th>
+                    <th>Imagen</th>
+                    <th>Cargo</th>
+                    <th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in vehiculos %}
+                <tr data-id="{{ item.id }}">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.descripcion }}</td>
+                    <td>{{ item.marca }}</td>
+                    <td>{{ item.modelo }}</td>
+                    <td>
+                        {% if item.estado.lower() == 'activo' %}
+                        <span>{{ item.estado }}</span>
+                        {% else %}
+                        <span>{{ item.estado }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.fecha_incorporacion.strftime('%d/%m/%Y') if item.fecha_incorporacion else '' }}</td>
+                    <td>Bs{{ "%.2f"|format(item.costo_inicial) }}</td>
+                    <td>{{ "{:.7f}".format(item.factor_de_actualizacion).rstrip('0').rstrip('.') }}</td>
+                    <td>{{ "%.2f"|format(item.costo_actualizado) }}</td><!--costo actualizado-->
+                    <td>{{ item.años_vida_util }} años</td>
+                    <td>Bs{{ "{:.5f}".format(item.depreciacion_acumulada).rstrip('0').rstrip('.') }}</td>
+                    <!--deepreciacion acumulada-->
+                    <td>Bs{{ "%.2f"|format(item.valor_residual) }}</td>
+                    <td>Bs{{ "%.2f"|format(item.valor_neto) }}</td><!--valor neto-->
+                    <td>
+                        {% if item.imagen %}
+                        <img src="{{ url_for('static', filename='uploads/' + item.imagen) }}" alt="Imagen del vehículo"
+                            class="img-thumbnail" style="max-width: 60px; max-height: 50px;">
+                        {% else %}
+                        <span class="text-muted fst-italic">Sin imagen</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.cargo or '-' }}</td>
+                    <td>{{ item.responsable or '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+    let vehiculoSeleccionado = null;
+
+    function mostrarMensaje() {
+        const mensaje = document.getElementById('mensaje-impresion');
+        mensaje.classList.remove('d-none');
+        setTimeout(() => mensaje.classList.add('d-none'), 1000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabla = document.getElementById('tabla-vehiculos');
+        const btnEditar = document.getElementById('btn-editar');
+        const btnEliminar = document.getElementById('btn-eliminar');
+
+        tabla.addEventListener('click', e => {
+            const fila = e.target.closest('tr[data-id]');
+            if (fila) {
+                tabla.querySelectorAll('tr').forEach(f => f.classList.remove('table-primary'));
+                fila.classList.add('table-primary');
+                vehiculoSeleccionado = fila.dataset.id;
+
+                btnEditar.disabled = false;
+                btnEliminar.disabled = false;
+
+                btnEditar.onclick = () => window.location.href = `/vehiculos/edit/${vehiculoSeleccionado}`;
+                btnEliminar.onclick = () => {
+                    if (confirm('¿Está seguro que desea eliminar este vehículo?')) {
+                        window.location.href = `/vehiculos/delete/${vehiculoSeleccionado}`;
+                    }
+                };
+            }
+        });
+    });
+</script>
+
+<!-- Estilos -->
+<style>
+    .table-hover tbody tr:hover {
+        cursor: pointer;
+    }
+
+    button:disabled {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    img.img-thumbnail {
+        object-fit: cover;
+    }
+
+    /* Mensaje impresión gris plomo transparente */
+    #mensaje-impresion {
+        background-color: rgba(80, 80, 80, 0.9);
+        color: #fff;
+        border: none;
+        padding: 15px;
+        font-weight: bold;
+        text-align: center;
+        width: 100%;
+        border-radius: 8px;
+    }
+
+    @media (max-width: 768px) {
+
+        table th,
+        table td {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+{% endblock %}

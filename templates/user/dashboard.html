@@ -1,0 +1,17 @@
+{% extends 'base2.html'%}
+{%block title%} Panel de Usuario{%endblock%}
+{%block content%}
+<div class="container mt-4">
+    <h2 class="mb-4">Bienvenido,{{ name }}!</h2>
+    <div class="card">
+        <div class="card-body">
+            <p><strong>Nombre de usuario:</strong>{{current_user.username}}</p>
+            <p><strong>Correo electronico:</strong>{{ current_user.email}}</p>
+          
+            <div class="text-center mt-4">
+                <a style="background-color: red;"  href="{{ url_for('user.logout') }}" class="btn btn-primary">Cerrar Sesión</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+determinacion del costos de activo fijo para estados financieros									
+									
+descripcion	marca	modelo	estado	fecha de incorporacion	costo inicial	factor de actualizacion	costos actuzalizado	Deprecion acumulada	valor neto
+minibus	        toyota	1996	bueno    	20/6/2024	   70000	      1,000006              70000,42	     14000,084	          56000,34
+
+
+en esta tabla hay una operacion 
+que est la de factor actualizacion--> 1.000006* costo incial -->70000= costos actualizado-->70000.42-->resultado de  costo actulizado
+
+y esta otra y costo actualizado que es 70000.42 * 0,2 que el coneficiente = 14000.084 --> depreciacion acumulada 
+
+calcular el valor neto es de  costo actualizado -->70000.42-14000,084 que es --> depreciacion acumulada es = valor neto 56000,34 bolivianos
+
+
+
+
+tengo quer hacer 4 botones que tengan la funcion de imprimir  es para un systema de activos fijos
+boton 1 de imprimir -->> este imprime la incorporacion y registro de activo fijo 
+boton 2 de imprimir -->> este imprime la determinacion del costos de activo fijo para estados financieros
+boton 3 de imprimir -->> este imprimi el acta de asignacion de activo fijo
+boton 4 de imprimir -->> este imprime  el acta de reasignacion de activo fijo busca simplicar esos nombrerr paara poner en el boton o alguna manera que sea que  reconocible que boton ara esa funcion
+
+
+
+valor neto 
+depreciacion acumulada
+costo actualizado
+
+Minibus	Toyota	1996	Malo	20/06/2024	Bs70000.00	1.00566	70396.20	5 años	Bs14079.24	Bs5000.00	Bs56316.96	Sin imagen	Jefe de Logistica	María Fernanda Quispe
+
+
+
+
+
+imagen 
