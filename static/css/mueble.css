@@ -1,0 +1,27 @@
+
+    #table_mueble {
+        font-size: 9px;
+    }
+
+    #table_mueble th,
+    #table_mueble td {
+        padding: 0.2rem;
+        white-space: nowrap;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    #table_mueble img {
+        max-width: 40px;
+        max-height: 30px;
+    }
+
+    .btn-sm {
+        font-size: 14px;
+        padding: 0.15rem 0.4rem;
+    }
+
+    .dropdown-item {
+        font-size: 11px;
+    }
+

@@ -1,23 +1,25 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Mantenimiento de Vehículos</h2>
+<link href="{{ url_for('static', filename='css/style3.css') }}" rel="stylesheet">
+<div class=" content">
+ <div class="content-wrapper">
+    <h2 class="mb-4">Mantenimiento de Vehículos</h2>
 
     <form method="post" enctype="multipart/form-data">
         <!-- DATOS IDENTIFICACIÓN -->
         <fieldset class="border p-3 mb-4">
-            <legend class="w-auto px-2">Datos de indentificacion</legend>
+            <legend>Datos de Identificación</legend>
             <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6">
                     <label for="descripcion" class="form-label">Descripción:</label>
                     <input type="text" class="form-control" id="descripcion" name="descripcion" required>
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-3">
                     <label for="marca" class="form-label">Marca:</label>
                     <input type="text" class="form-control" id="marca" name="marca" required>
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-3">
                     <label for="modelo" class="form-label">Modelo:</label>
                     <input type="text" class="form-control" id="modelo" name="modelo" required>
                 </div>
@@ -26,9 +28,9 @@
 
         <!-- DATOS GENERALES -->
         <fieldset class="border p-3 mb-4">
-            <legend class="w-auto px-2">Datos generales</legend>
+            <legend>Datos Generales</legend>
             <div class="row">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4">
                     <label for="estado" class="form-label">Estado:</label>
                     <select class="form-select" id="estado" name="estado" required>
                         <option value="">-- Seleccione --</option>
@@ -37,12 +39,12 @@
                         <option value="Malo">Malo</option>
                     </select>
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4">
                     <label for="fecha_incorporacion" class="form-label">Fecha de Incorporación:</label>
                     <input type="date" class="form-control" id="fecha_incorporacion" name="fecha_incorporacion"
                         required>
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4">
                     <label for="imagen" class="form-label">Imagen del Vehículo:</label>
                     <input type="file" class="form-control" id="imagen" name="imagen" accept="image/*">
                 </div>
@@ -51,39 +53,39 @@
 
         <!-- DATOS FINANCIEROS -->
         <fieldset class="border p-3 mb-4">
-            <legend class="w-auto px-2">Datos financieros</legend>
+            <legend>Datos Financieros</legend>
             <div class="row">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4">
                     <label for="costo_inicial" class="form-label">Costo Inicial:</label>
-                    <input type="number" step="0.01" class="form-control" id="costo_inicial" min="0" name="costo_inicial"
-                        required>
+                    <input type="number" step="0.01" class="form-control" id="costo_inicial" min="0"
+                        name="costo_inicial" required>
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label for="valor_residual" class="form-label">Valor Residual:</label>
-                    <input type="number" step="0.01" class="form-control" id="valor_residual" min="0" name="valor_residual"
-                        required>
+                <div class="col-md-4">
+                    <label for="factura" class="form-label">Nº Factura:</label>
+                    <input type="number" step="0.01" class="form-control" id="factura" min="0" name="factura" required>
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4">
                     <label for="factor_de_actualizacion" class="form-label">Factor de Actualización:</label>
                     <input type="number" step="0.00000001" class="form-control" id="factor_de_actualizacion" min="0"
                         name="factor_de_actualizacion" required>
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4">
                     <label for="años_vida_util" class="form-label">Años de Vida Útil:</label>
-                    <input type="number" class="form-control" id="años_vida_util" name="años_vida_util" min="0" required>
+                    <input type="number" class="form-control" id="años_vida_util" name="años_vida_util" min="0"
+                        required>
                 </div>
             </div>
         </fieldset>
 
         <!-- DATOS RESPONSABLE -->
         <fieldset class="border p-3 mb-4">
-            <legend class="w-auto px-2">Datos del responsable</legend>
+            <legend>Datos del Responsable</legend>
             <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6">
                     <label for="cargo" class="form-label">Cargo:</label>
                     <input type="text" class="form-control" id="cargo" name="cargo">
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6">
                     <label for="responsable" class="form-label">Nombre del Responsable:</label>
                     <input type="text" class="form-control" id="responsable" name="responsable">
                 </div>
@@ -91,11 +93,15 @@
         </fieldset>
 
         <!-- Botones -->
-        <div class="text-end mb-4">
-            <button type="submit" class="btn btn-primary">Guardar</button>
+        <div class="d-flex justify-content mb-4">
+            <button type="submit" class="btn btn-primary mr-2">Guardar</button>
             <a href="{{ url_for('vehiculo.index') }}" class="btn btn-secondary">Cancelar</a>
         </div>
-
+        <br>
+        <br>
+        <br>
     </form>
+ </div>   
 </div>
+
 {% endblock %}

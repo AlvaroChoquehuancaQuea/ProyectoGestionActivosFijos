@@ -1,4 +1,4 @@
-from flask import request, redirect, url_for, Blueprint, current_app, flash, send_file
+from flask import request, redirect, url_for, Blueprint, current_app, flash, send_file,render_template
 from datetime import datetime
 from reportlab.platypus import Image as RLImage
 from models.vehiculos_automotores_model import Vehiculo
@@ -11,9 +11,14 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.units import inch
+import json
+from flask_login import current_user
+
+import numpy as np
+import cv2
+import pyzbar.pyzbar as pyzbar
 
 vehiculo_bp = Blueprint('vehiculo', __name__, url_prefix='/vehiculos')
-
 
 @vehiculo_bp.route('/')
 def index():
@@ -21,7 +26,8 @@ def index():
     descripcion = request.args.get('descripcion', '').strip().lower()
     fecha_str = request.args.get('fecha', '').strip()
 
-    vehiculos = Vehiculo.get_all()
+    # Solo traer vehículos del usuario actual
+    vehiculos = Vehiculo.query.filter_by(user_id=current_user.id).all()
     resultados = []
 
     for v in vehiculos:
@@ -34,12 +40,47 @@ def index():
                 fecha_busqueda = datetime.strptime(fecha_str, '%Y-%m-%d').date()
                 coincide_fecha = v.fecha_incorporacion == fecha_busqueda
             except Exception:
-                coincide_fecha = False  # o simplemente dejarlo como True para no filtrar mal
+                coincide_fecha = False
 
         if coincide_codigo and coincide_descripcion and coincide_fecha:
             resultados.append(v)
 
     return vehiculos_automotores_view.list(resultados)
+
+
+@vehiculo_bp.route('/verificar_qr', methods=['POST'])
+def verificar_qr():
+    qr_file = request.files.get('qrImage')
+    if not qr_file:
+        flash("No se subió ningún archivo", "danger")
+        return redirect(url_for('vehiculo.index'))
+
+    try:
+        img_bytes = np.asarray(bytearray(qr_file.read()), dtype=np.uint8)
+        img = cv2.imdecode(img_bytes, cv2.IMREAD_COLOR)
+
+        decoded_objs = pyzbar.decode(img)
+
+        if not decoded_objs:
+            flash("No se detectó ningún código QR en la imagen", "warning")
+            return redirect(url_for('vehiculo.index'))
+
+        qr_text = decoded_objs[0].data.decode('utf-8')
+        datos_qr = json.loads(qr_text)
+
+        # Extraer los 3 campos clave
+        id_vehiculo = datos_qr.get('id', '')
+        descripcion = datos_qr.get('descripcion', '')
+        fecha = datos_qr.get('fecha_incorporacion', '')
+
+        # Redirigir con parámetros GET
+        return redirect(url_for('vehiculo.index', codigo=id_vehiculo, descripcion=descripcion, fecha=fecha))
+
+    except Exception as e:
+        flash(f"Error al procesar la imagen QR: {str(e)}", "danger")
+        return redirect(url_for('vehiculo.index'))
+    
+
 
 #Creacion de Vehiculos
 @vehiculo_bp.route('/create', methods=['GET', 'POST'])
@@ -53,7 +94,7 @@ def create():
             estado = request.form['estado']
             costo_inicial = float(request.form['costo_inicial'])#Costo inicial
             fecha_incorporacion = datetime.strptime(request.form['fecha_incorporacion'], '%Y-%m-%d').date()
-            valor_residual = float(request.form['valor_residual'])
+            factura = float(request.form['factura'])
             años_vida_util = int(request.form['años_vida_util'])#Años de vida util 
             factor_de_actualizacion = float(request.form['factor_de_actualizacion'])#factor actualizado
             cargo = request.form.get('cargo')
@@ -88,12 +129,13 @@ def create():
                 estado=estado,
                 costo_inicial=costo_inicial,
                 fecha_incorporacion=fecha_incorporacion,
-                valor_residual=valor_residual,
+                factura=factura,
                 años_vida_util=años_vida_util,
                 factor_de_actualizacion=factor_de_actualizacion,
                 imagen=imagen_filename,
                 cargo=cargo,
-                responsable=responsable
+                responsable=responsable,
+                user_id=current_user.id
                 
             )
             # Cálculos automáticos
@@ -125,7 +167,7 @@ def edit(id):
         estado = request.form['estado']
         costo_inicial = float(request.form['costo_inicial'])
         fecha_incorporacion = datetime.strptime(request.form['fecha_incorporacion'], '%Y-%m-%d').date()
-        valor_residual = float(request.form['valor_residual'])
+        factura = float(request.form['factura'])
         años_vida_util = int(request.form['años_vida_util'])
         factor_de_actualizacion = float(request.form['factor_de_actualizacion'])
         
@@ -161,7 +203,7 @@ def edit(id):
             estado=estado,
             costo_inicial=costo_inicial,
             fecha_incorporacion=fecha_incorporacion,
-            valor_residual=valor_residual,
+            factura=factura,
             años_vida_util=años_vida_util,
             factor_de_actualizacion=factor_de_actualizacion,
             imagen=imagen,
@@ -880,3 +922,5 @@ def imprimir_reasignacion():
         download_name="Acta de Reasignacion.pdf",
         mimetype='application/pdf'
     )    
+    
+        

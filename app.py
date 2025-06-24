@@ -5,15 +5,10 @@ from controllers import equipo_recreativo_controller
 from controllers import vehiculos_automotores_controller
 from controllers import muebles_enseres_controller
 from controllers import equipos_computacion_controller
-from controllers import equipo_comunicacion_controller
-"""from controllers import cliente_controller
-from controllers import producto_controller
-from controllers import venta_controller
-from controllers import user_controller"""
 from controllers import user_controller
 from models.user_model import User
 from database import db 
-"""from models.user_model import User"""
+
 from flask import request
 from datetime import timedelta
 
@@ -35,16 +30,12 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
     
     
 app.register_blueprint(edificios_controller.edificio_bp)
-app.register_blueprint(equipo_comunicacion_controller.equipo_bp)
 app.register_blueprint(equipo_recreativo_controller.recreativo_bp)
 app.register_blueprint(equipos_computacion_controller.computadora_bp)
 app.register_blueprint(muebles_enseres_controller.mueble_bp)
 app.register_blueprint(vehiculos_automotores_controller.vehiculo_bp)
 app.register_blueprint(user_controller.user_bp)
-"""@app.route("/")
-def index():
-    return render_template("base.html")
-"""
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.get_by_id(int(user_id))

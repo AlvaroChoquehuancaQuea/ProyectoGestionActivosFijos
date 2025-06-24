@@ -1,0 +1,136 @@
+ /*LOGIN.HTML*/
+
+ body {
+     background-color: #2c2c3b !important;
+     color: white;
+     /* para que el texto se vea sobre fondo oscuro */
+ }
+
+ .panel {
+     background-color: #2c2c3b;
+     /* Opcional: texto en blanco para mejor contraste */
+     color: white;
+     padding: 1rem;
+     /* espacio interno */
+     border-radius: 0.25rem;
+     /* si quieres bordes redondeados */
+ }
+
+ button.submit1 {
+     background-color: #0891b2;
+     padding: 1rem;
+     color: #fff;
+     font-size: 1rem;
+     font-weight: 500;
+     border: none;
+     transition: background-color 0.3s;
+     cursor: pointer;
+     display: inline-block;
+     /* tamaño natural */
+ }
+
+ button.submit:hover {
+     background-color: #057a92;
+ }
+
+ @media (min-width: 400px) {
+     .titulo {
+         font-size: 3.5rem;
+         /* antes 7rem */
+     }
+ }
+
+ .titulo1 {
+     background: linear-gradient(to right, #0891B2 0%, rgb(91, 217, 247) 100%);
+     -webkit-background-clip: text;
+     -webkit-text-fill-color: transparent;
+     background-clip: text;
+     color: transparent;
+     text-align: center;
+     font-size: 6rem;
+     /* antes 10rem */
+ }
+
+ /***REGISTER.HTML**/
+
+ body {
+     background-color: linear-gradient(to right, #7C3AED 0%, rgb(217.223255814, 198.1906976744, 249.8093023256) 100%);
+     color: white;
+     /* para que el texto se vea sobre fondo oscuro */
+ }
+
+ .panel {
+     background-color: #2c2c3b;
+     /* Opcional: texto en blanco para mejor contraste */
+     color: white;
+     padding: 1rem;
+     /* espacio interno */
+     border-radius: 0.25rem;
+     /* si quieres bordes redondeados */
+ }
+
+ button.submit {
+     background-color: rgb(95.3302325581, 20.4279069767, 223.5720930233);
+     padding: 1rem;
+     color: #fff;
+     font-size: 1rem;
+     font-weight: 700;
+     border: none;
+     transition: background-color 0.3s;
+     cursor: pointer;
+     display: inline-block;
+     /* tamaño natural */
+ }
+
+ button.submit:hover {
+     background-color: #057a92;
+ }
+
+ @media (min-width: 400px) {
+     .titulo {
+         font-size: 3.5rem;
+         /* antes 7rem */
+     }
+ }
+
+ .titulo {
+     background: linear-gradient(to right, #430249 0%, rgb(91.3548387097, 217.3064516129, 247.6451612903) 100%);
+     background-clip: border-box;
+     color: rgba(0, 0, 0, 0);
+     background-clip: text;
+     text-align: center;
+     font-size: 6rem;
+ }
+
+ body {
+     background-color: #2c2c3b !important;
+     color: white;
+     /* para que el texto se vea sobre fondo oscuro */
+ }
+
+ /**vehiculos_automotores**/
+  #table_vehiculo {
+        font-size: 9px;
+    }
+
+    #table_vehiculo th,
+    #table_vehiculo td {
+        padding: 0.2rem;
+        white-space: nowrap;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    #table_vehiculo img {
+        max-width: 40px;
+        max-height: 30px;
+    }
+
+    .btn-sm {
+        font-size: 14px;
+        padding: 0.15rem 0.4rem;
+    }
+
+    .dropdown-item {
+        font-size: 11px;
+    }

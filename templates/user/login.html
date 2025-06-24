@@ -1,9 +1,11 @@
 {% extends 'base2.html'%}
 {% block title %}Login{% endblock %}
 {% block content %}
+<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
 <div class="container my-5">
     <div class="text-center mb-4">
-        <h1 class="text-primary">Gestion de Activos Fijos</h1>
+        <h1 class="titulo1">Gestion de Activos Fijos</h1>
         <h2>Optimiza y Controla el Valor de tus Bienes</h2>
         <h3 class="mt-4 ">Iniciar Sesión</h3>
     </div>
@@ -23,14 +25,14 @@
             </div>
 
             <div class="mb-3 text-start">
-                <button class="btn btn-primary px-4">Iniciar Sesión</button>
+                <button class="submit1">Iniciar Sesión</button>
             </div>
 
             <div class="d-flex justify-content-between mt-3">
-                <a href="{{ url_for('user.register') }}" class="text-decoration-none">
+                <a href="{{ url_for('user.register') }}" style="color: white;" class="text-decoration-none">
                     ¿Aún no tienes una cuenta? Regístrate aquí
                 </a>
-                <a href="#" class="text-decoration-none">
+                <a href="#" class="text-decoration-none" style="color: white;">
                     ¿Olvidaste tu Contraseña?
                 </a>
             </div>

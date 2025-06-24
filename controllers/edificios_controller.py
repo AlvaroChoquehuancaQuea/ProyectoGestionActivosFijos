@@ -1,8 +1,10 @@
 from flask import request, redirect, url_for, Blueprint, current_app, flash, send_file
 from datetime import datetime
+from reportlab.platypus import Image as RLImage
 from models.edificios_model import Edificio
 from views import edificios_view
 from werkzeug.utils import secure_filename
+from flask_login import current_user
 import os
 from io import BytesIO
 from reportlab.lib.pagesizes import letter, landscape
@@ -10,25 +12,74 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.units import inch
+import json
+
+import numpy as np
+import cv2
+import pyzbar.pyzbar as pyzbar
 
 edificio_bp = Blueprint('edificio', __name__, url_prefix='/edificios')
 
 
-# Listado de vehículos
 @edificio_bp.route('/')
 def index():
-    edificios = Edificio.get_all()
-    return edificios_view.list(edificios)
+    codigo = request.args.get('codigo', '').strip()
+    descripcion = request.args.get('descripcion', '').strip().lower()
+    fecha_str = request.args.get('fecha', '').strip()
 
-def get_upload_folder():
-    """Obtiene la carpeta de uploads con fallback por defecto"""
-    upload_folder = current_app.config.get('UPLOAD_FOLDER', 'static/uploads')
-    
-    # Crear directorio si no existe
-    if not os.path.exists(upload_folder):
-        os.makedirs(upload_folder)
-    
-    return upload_folder
+    # Solo traer vehículos del usuario actual
+    edificios = Edificio.query.filter_by(user_id=current_user.id).all()
+    resultados = []
+
+    for v in edificios:
+        coincide_codigo = codigo == '' or str(v.id) == codigo
+        coincide_descripcion = descripcion == '' or descripcion in v.descripcion.lower()
+        coincide_fecha = True
+
+        if fecha_str:
+            try:
+                fecha_busqueda = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+                coincide_fecha = v.fecha_incorporacion == fecha_busqueda
+            except Exception:
+                coincide_fecha = False
+
+        if coincide_codigo and coincide_descripcion and coincide_fecha:
+            resultados.append(v)
+
+    return edificios_view.list(resultados)
+
+
+@edificio_bp.route('/verificar_qr', methods=['POST'])
+def verificar_qr():
+    qr_file = request.files.get('qrImage')
+    if not qr_file:
+        flash("No se subió ningún archivo", "danger")
+        return redirect(url_for('edificio.index'))
+
+    try:
+        img_bytes = np.asarray(bytearray(qr_file.read()), dtype=np.uint8)
+        img = cv2.imdecode(img_bytes, cv2.IMREAD_COLOR)
+
+        decoded_objs = pyzbar.decode(img)
+
+        if not decoded_objs:
+            flash("No se detectó ningún código QR en la imagen", "warning")
+            return redirect(url_for('edificio.index'))
+
+        qr_text = decoded_objs[0].data.decode('utf-8')
+        datos_qr = json.loads(qr_text)
+
+        # Extraer los 3 campos clave
+        id_edificio = datos_qr.get('id', '')
+        descripcion = datos_qr.get('descripcion', '')
+        fecha = datos_qr.get('fecha_incorporacion', '')
+
+        # Redirigir con parámetros GET
+        return redirect(url_for('edificio.index', codigo=id_edificio, descripcion=descripcion, fecha=fecha))
+
+    except Exception as e:
+        flash(f"Error al procesar la imagen QR: {str(e)}", "danger")
+        return redirect(url_for('edificio.index'))
 
 
 #Creacion de edificios
@@ -38,12 +89,12 @@ def create():
         try:
             # Procesar campos del formulario
             descripcion = request.form['descripcion']
-            marca = request.form['marca']
-            modelo = request.form['modelo']
+            categoria = request.form['categoria']
+            uso = request.form['uso']
             estado = request.form['estado']
             costo_inicial = float(request.form['costo_inicial'])
             fecha_incorporacion = datetime.strptime(request.form['fecha_incorporacion'], '%Y-%m-%d').date()
-            valor_residual = float(request.form['valor_residual'])
+            factura = float(request.form['factura'])
             años_vida_util = int(request.form['años_vida_util'])
             factor_de_actualizacion = float(request.form['factor_de_actualizacion'])
             cargo = request.form.get('cargo')
@@ -73,17 +124,18 @@ def create():
             # Crear nuevo vehículo
             edificio = Edificio(
                 descripcion=descripcion,
-                marca=marca,
-                modelo=modelo,
+                categoria=categoria,
+                uso=uso,
                 estado=estado,
                 costo_inicial=costo_inicial,
                 fecha_incorporacion=fecha_incorporacion,
-                valor_residual=valor_residual,
+                factura=factura,
                 años_vida_util=años_vida_util,
                 factor_de_actualizacion=factor_de_actualizacion,
                 imagen=imagen_filename,
                 cargo=cargo,
-                responsable=responsable
+                responsable=responsable,
+                user_id=current_user.id
             )
 
             edificio.save()
@@ -103,12 +155,12 @@ def edit(id):
     edificio = Edificio.get_by_id(id)
     if request.method == 'POST':
         descripcion = request.form['descripcion']
-        marca = request.form['marca']
-        modelo = request.form['modelo']
+        categoria = request.form['categoria']
+        uso = request.form['uso']
         estado = request.form['estado']
         costo_inicial = float(request.form['costo_inicial'])
         fecha_incorporacion = datetime.strptime(request.form['fecha_incorporacion'], '%Y-%m-%d').date()
-        valor_residual = float(request.form['valor_residual'])
+        factura = float(request.form['factura'])
         años_vida_util = int(request.form['años_vida_util'])
         factor_de_actualizacion = float(request.form['factor_de_actualizacion'])
         
@@ -139,12 +191,12 @@ def edit(id):
 
         edificio.update(
             descripcion=descripcion,
-            marca=marca,
-            modelo=modelo,
+            categoria=categoria,
+            uso=uso,
             estado=estado,
             costo_inicial=costo_inicial,
             fecha_incorporacion=fecha_incorporacion,
-            valor_residual=valor_residual,
+            factura=factura,
             años_vida_util=años_vida_util,
             factor_de_actualizacion=factor_de_actualizacion,
             imagen=imagen,
@@ -217,8 +269,8 @@ def imprimir():
         headers = [
             Paragraph("<b>ID</b>", header_style),
             Paragraph("<b>Descripción</b>", header_style),
-            Paragraph("<b>Marca</b>", header_style),
-            Paragraph("<b>Modelo</b>", header_style),
+            Paragraph("<b>categoria</b>", header_style),
+            Paragraph("<b>uso</b>", header_style),
             Paragraph("<b>Costo Inicial</b>", header_style),
             Paragraph("<b>Valor Residual</b>", header_style),
             Paragraph("<b>Vida Útil</b>", header_style),
@@ -230,20 +282,20 @@ def imprimir():
         # Calcular valor neto correctamente
         for v in edificios:
             try:
-                # Depreciación lineal: valor neto = costo_inicial - ((costo_inicial - valor_residual) * años_transcurridos / años_vida_util)
+                # Depreciación lineal: valor neto = costo_inicial - ((costo_inicial - factura) * años_transcurridos / años_vida_util)
                 # Aquí asumimos que años_transcurridos = años_vida_util para mostrar valor neto al final de vida útil (puedes ajustar)
-                valor_neto = v.costo_inicial - ((v.costo_inicial - v.valor_residual) * (v.años_vida_util / v.años_vida_util))
-                # Simplifica a valor_residual en realidad, pero dejo fórmula
+                valor_neto = v.costo_inicial - ((v.costo_inicial - v.factura) * (v.años_vida_util / v.años_vida_util))
+                # Simplifica a factura en realidad, pero dejo fórmula
             except Exception:
                 valor_neto = 0.0
 
             data.append([
                 str(v.id),
                 v.descripcion,
-                v.marca,
-                v.modelo,
+                v.categoria,
+                v.uso,
                 f"Bs{v.costo_inicial:,.2f}",
-                f"Bs{v.valor_residual:,.2f}",
+                f"Bs{v.factura:,.2f}",
                 f"{v.años_vida_util} años",
                 f"Bs{valor_neto:,.2f}"
             ])
@@ -322,3 +374,551 @@ def delete(id):
     edificio = Edificio.get_by_id(id)
     edificio.delete()
     return redirect(url_for('edificio.index'))
+
+
+
+
+###############################EDIFICIOS################################
+
+
+
+@edificio_bp.route('/incorporacion')
+def incorporacion():
+    edificios = Edificio.get_all()
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(letter),
+        rightMargin=inch,
+        leftMargin=inch,
+        topMargin=inch,
+        bottomMargin=inch
+    )
+
+    styles = getSampleStyleSheet()
+    elements = []
+
+    title_style = ParagraphStyle(
+        'Title',
+        parent=styles['Heading1'],
+        fontSize=18,
+        alignment=1,
+        textColor=colors.HexColor('#2c3e50'),
+        spaceAfter=20
+    )
+    title = Paragraph("INCORPORACIÓN Y REGISTRO DE ACTIVO FIJO", title_style)
+    elements.append(title)
+
+    fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
+    info_empresa = Paragraph("Sistema de Revalorización de Activos Fijos", styles['Normal'])
+    info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal'])
+    elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
+
+    header_style = ParagraphStyle(
+        'Header',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.white,
+        alignment=1,
+        backColor=colors.HexColor('#3498db')
+    )
+    headers = [
+        Paragraph("<b>Descripción</b>", header_style),
+        Paragraph("<b>Categoria</b>", header_style),
+        Paragraph("<b>uso</b>", header_style),
+        Paragraph("<b>Estado</b>", header_style),
+        Paragraph("<b>Fecha de Incorporación</b>", header_style),
+        Paragraph("<b>Costo Inicial</b>", header_style),
+        Paragraph("<b>Imagen</b>", header_style),
+        Paragraph("<b>Años de Vida Útil</b>", header_style)
+    ]
+    def formatear_variable(valor):
+        return f"{valor:.5f}".rstrip('0').rstrip('.')
+
+    data = [headers]
+    for v in edificios:
+        # Ruta absoluta a la imagen
+        ruta_imagen = os.path.join(current_app.root_path, 'static', 'uploads', v.imagen or '')
+        if v.imagen and os.path.exists(ruta_imagen):
+            try:
+                imagen = RLImage(ruta_imagen, width=0.8*inch, height=0.6*inch)
+            except:
+                imagen = Paragraph("Error al cargar", styles['Normal'])
+        else:
+            imagen = Paragraph("Sin imagen", styles['Normal'])
+
+        data.append([
+            v.descripcion,
+            v.categoria,
+            v.uso,
+            v.estado,
+            v.fecha_incorporacion.strftime('%d/%m/%Y'),
+            f"Bs{formatear_variable(v.costo_inicial)}",
+            imagen,
+            f"{v.años_vida_util} años"
+        ])
+
+    table = Table(data, colWidths=[
+        1.8*inch, 1*inch, 1*inch, 1*inch,
+        1.4*inch, 1.2*inch, 1*inch, 1.2*inch
+    ])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#ecf0f1')),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#f9f9f9'), colors.white])
+    ]))
+
+    elements.append(table)
+
+    def add_page_number(canvas, doc):
+        canvas.saveState()
+        canvas.setFont('Helvetica', 8)
+        canvas.setFillColor(colors.HexColor('#7f8c8d'))
+        canvas.drawString(inch, 0.5*inch, f"Total de edificios: {len(edificios)}")
+        canvas.drawRightString(landscape(letter)[0] - inch, 0.5*inch, f"Página {doc.page}")
+        canvas.setStrokeColor(colors.black)
+        canvas.line(inch, inch, 3*inch, inch)
+        canvas.drawString(inch, 0.75*inch, "Responsable del reporte")
+        canvas.restoreState()
+
+    doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)
+
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="incorporacion.pdf",
+        mimetype='application/pdf'
+    )
+
+
+
+
+
+@edificio_bp.route('/financiero')
+def financiero():
+    edificios = Edificio.get_all()
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(letter),
+        rightMargin=inch,
+        leftMargin=inch,
+        topMargin=inch,
+        bottomMargin=inch
+    )
+
+    styles = getSampleStyleSheet()
+    elements = []
+
+    title_style = ParagraphStyle(
+        'Title',
+        parent=styles['Heading1'],
+        fontSize=18,
+        alignment=1,
+        textColor=colors.HexColor('#2c3e50'),
+        spaceAfter=20
+    )
+    title = Paragraph("DETERMINACIÓN DE COSTOS DE ACTIVO FIJO PARA ESTADOS FINANCIEROS", title_style)
+    elements.append(title)
+
+    fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
+    info_empresa = Paragraph("Sistema de Revalorización de Activos Fijos", styles['Normal'])
+    info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal'])
+    elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
+
+    header_style = ParagraphStyle(
+        'Header',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.white,
+        alignment=1,
+        backColor=colors.HexColor('#3498db')
+    )
+    headers = [
+        Paragraph("<b>Descripción</b>", header_style),
+        Paragraph("<b>Categoria</b>", header_style),
+        Paragraph("<b>Uso</b>", header_style),
+        Paragraph("<b>Estado</b>", header_style),
+        Paragraph("<b>Fecha de Incorporación</b>", header_style),
+        Paragraph("<b>Costo Inicial</b>", header_style),
+        Paragraph("<b>Fac. Actualización</b>", header_style),
+        Paragraph("<b>Costo Actualizado</b>", header_style),
+        Paragraph("<b>Depreciación Acumulada</b>", header_style),
+        Paragraph("<b>Valor Neto</b>", header_style)  
+    ]
+    def formatear_variable(valor):
+        return f"{valor:.5f}".rstrip('0').rstrip('.')
+
+    data = [headers]
+    for v in edificios:
+        data.append([
+            v.descripcion,
+            v.categoria,
+            v.uso,
+            v.estado,
+            v.fecha_incorporacion.strftime('%d/%m/%Y'),
+            f"Bs{formatear_variable(v.costo_inicial)}",
+            f"{v.factor_de_actualizacion:,.7g}",
+            f"Bs{formatear_variable(v.costo_actualizado)}",
+            f"Bs{formatear_variable(v.depreciacion_acumulada)}",
+            f"Bs{formatear_variable(v.valor_neto)}"
+        ])
+
+    table = Table(data, colWidths=[
+           1.0*inch,  # Descripción
+            0.9*inch,  # categoria
+            0.8*inch,  # uso
+            0.8*inch,  # Estado
+            1.1*inch,  # Fecha
+            1.2*inch,  # Costo Inicial
+            1.0*inch,  # Factor de Actualización
+            1.1*inch,  # Costo Actualizado
+            1.2*inch,  # Depreciación Acumulada
+            1.2*inch  
+    ])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#ecf0f1')),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#f9f9f9'), colors.white])
+    ]))
+
+    elements.append(table)
+
+    def add_page_number(canvas, doc):
+        canvas.saveState()
+        canvas.setFont('Helvetica', 8)
+        canvas.setFillColor(colors.HexColor('#7f8c8d'))
+        canvas.drawString(inch, 0.5*inch, f"Total de edificios: {len(edificios)}")
+        canvas.drawRightString(landscape(letter)[0] - inch, 0.5*inch, f"Página {doc.page}")
+        canvas.setStrokeColor(colors.black)
+        canvas.line(inch, inch, 3*inch, inch)
+        canvas.drawString(inch, 0.75*inch, "Responsable del reporte")
+        canvas.restoreState()
+
+    doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)
+
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="financiero.pdf",
+        mimetype='application/pdf'
+    )
+
+@edificio_bp.route('/asignacion', methods=['GET'])
+def asignacion():
+    edificios = Edificio.get_all()
+    return edificios_view.asignacion(edificios)
+
+
+
+
+
+
+
+
+
+
+
+
+@edificio_bp.route('/edificios/imprimir_asignacion', methods=['POST'])
+def imprimir_asignacion():
+    funcionario = request.form['funcionario']
+    cargo = request.form['cargo']
+    codigo_barras = request.form['codigo_barras']
+    
+    edificios = Edificio.get_all()
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(letter),
+        rightMargin=inch,
+        leftMargin=inch,
+        topMargin=inch,
+        bottomMargin=inch
+    )
+
+    styles = getSampleStyleSheet()
+    elements = []
+
+    title_style = ParagraphStyle(
+        'Title',
+        parent=styles['Heading1'],
+        fontSize=18,
+        alignment=1,
+        textColor=colors.HexColor('#2c3e50'),
+        spaceAfter=20
+    )
+    title = Paragraph("ACTA DE ASIGNACIÓN DE ACTIVO FIJO", title_style)
+    elements.append(title)
+
+    fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
+    info_empresa = Paragraph("Sistema de Revalorización de Activos Fijos", styles['Normal'])
+    info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal'])
+    elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
+
+    header_style = ParagraphStyle(
+        'Header',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.white,
+        alignment=1,
+        backColor=colors.HexColor('#3498db')
+    )
+    headers = [
+        Paragraph("<b>Descripción</b>", header_style),
+        Paragraph("<b>Categoria</b>", header_style),
+        Paragraph("<b>Uso</b>", header_style),
+        Paragraph("<b>Estado</b>", header_style),
+        Paragraph("<b>Fecha de Incorporación</b>", header_style),
+        Paragraph("<b>Nombre del Funcionario</b>", header_style),
+        Paragraph("<b>Cargo</b>", header_style),
+        Paragraph("<b>Nombre Jefe Activos</b>", header_style),
+        Paragraph("<b>Cargo</b>", header_style),
+        Paragraph("<b>Código de Barras</b>", header_style)  
+    ]
+  
+    
+    
+    normal_style = ParagraphStyle(
+        'NormalWrap',
+        parent=styles['Normal'],
+        fontSize=9,
+        leading=10
+    )
+    data = [headers]
+    for v in edificios:
+        data.append([
+            Paragraph(v.descripcion, normal_style),
+            Paragraph(v.categoria, normal_style),
+            Paragraph(v.uso, normal_style),
+            Paragraph(v.estado, normal_style),
+            Paragraph(v.fecha_incorporacion.strftime("%d/%m/%Y") if v.fecha_incorporacion else "", normal_style),
+            Paragraph(funcionario, normal_style),
+            Paragraph(cargo, normal_style),
+            Paragraph(v.responsable if v.responsable else "—", normal_style),
+            Paragraph(v.cargo if v.cargo else "—", normal_style),
+            Paragraph(codigo_barras, normal_style)
+        ])
+
+    table = Table(data, colWidths=[
+           1.0*inch,  # Descripción
+            0.9*inch,  # categoria
+            0.8*inch,  # uso
+            0.8*inch,  # Estado
+            1.1*inch,  # Fecha
+            1.2*inch,  # Costo Inicial
+            1.0*inch,  # Factor de Actualización
+            1.1*inch,  # Costo Actualizado
+            1.2*inch,  # Depreciación Acumulada
+            1.2*inch  
+    ])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#ecf0f1')),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#f9f9f9'), colors.white])
+    ]))
+
+    elements.append(table)
+
+    def add_page_number(canvas, doc):
+        canvas.saveState()
+        canvas.setFont('Helvetica', 8)
+        canvas.setFillColor(colors.HexColor('#7f8c8d'))
+        canvas.drawString(inch, 0.5*inch, f"Total de edificios: {len(edificios)}")
+        canvas.drawRightString(landscape(letter)[0] - inch, 0.5*inch, f"Página {doc.page}")
+        canvas.setStrokeColor(colors.black)
+        canvas.line(inch, inch, 3*inch, inch)
+        canvas.drawString(inch, 0.75*inch, "Responsable del reporte")
+        canvas.restoreState()
+
+    doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)
+
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="Acta de Asignacion.pdf",
+        mimetype='application/pdf'
+    )
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+@edificio_bp.route('/edificios/imprimir_reasignacion', methods=['POST'])
+def imprimir_reasignacion():
+    jefe_activo = request.form['jefe_activos']
+    cargo_jefe = request.form['cargo_jefe']
+    funcionario = request.form['funcionario']
+    cargo = request.form['cargo']
+    codigo_barras = request.form['codigo_barras']
+    
+    edificios = Edificio.get_all()
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(letter),
+        rightMargin=inch,
+        leftMargin=inch,
+        topMargin=inch,
+        bottomMargin=inch
+    )
+
+    styles = getSampleStyleSheet()
+    elements = []
+
+    title_style = ParagraphStyle(
+        'Title',
+        parent=styles['Heading1'],
+        fontSize=18,
+        alignment=1,
+        textColor=colors.HexColor('#2c3e50'),
+        spaceAfter=20
+    )
+    title = Paragraph("ACTA DE REASIGNACIÓN DE ACTIVO FIJO", title_style)
+    elements.append(title)
+
+    fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
+    info_empresa = Paragraph("Sistema de Revalorización de Activos Fijos", styles['Normal'])
+    info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal'])
+    elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
+
+    header_style = ParagraphStyle(
+        'Header',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.white,
+        alignment=1,
+        backColor=colors.HexColor('#3498db')
+    )
+    headers = [
+        Paragraph("<b>Descripción</b>", header_style),
+        Paragraph("<b>Categoria</b>", header_style),
+        Paragraph("<b>Uso</b>", header_style),
+        Paragraph("<b>Estado</b>", header_style),
+        Paragraph("<b>Fecha de Incorporación</b>", header_style),
+        Paragraph("<b>Nombre del Funcionario</b>", header_style),
+        Paragraph("<b>Cargo</b>", header_style),
+        Paragraph("<b>Nombre Jefe Activos</b>", header_style),
+        Paragraph("<b>Cargo</b>", header_style),
+        Paragraph("<b>Código de Barras</b>", header_style)  
+    ]
+  
+    
+    
+    normal_style = ParagraphStyle(
+        'NormalWrap',
+        parent=styles['Normal'],
+        fontSize=9,
+        leading=10
+    )
+    data = [headers]
+    for v in edificios:
+        data.append([
+            Paragraph(v.descripcion, normal_style),
+            Paragraph(v.categoria, normal_style),
+            Paragraph(v.uso, normal_style),
+            Paragraph(v.estado, normal_style),
+            Paragraph(v.fecha_incorporacion.strftime("%d/%m/%Y") if v.fecha_incorporacion else "", normal_style),
+            Paragraph(funcionario, normal_style),
+            Paragraph(cargo, normal_style),
+            Paragraph(jefe_activo,normal_style),
+            Paragraph(cargo_jefe,normal_style),
+            Paragraph(codigo_barras, normal_style)
+        ])
+
+    table = Table(data, colWidths=[
+           1.0*inch,  # Descripción
+            0.9*inch,  # categoria
+            0.8*inch,  # uso
+            0.8*inch,  # Estado
+            1.1*inch,  # Fecha
+            1.2*inch,  # Costo Inicial
+            1.0*inch,  # Factor de Actualización
+            1.1*inch,  # Costo Actualizado
+            1.2*inch,  # Depreciación Acumulada
+            1.2*inch  
+    ])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#ecf0f1')),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#f9f9f9'), colors.white])
+    ]))
+
+    elements.append(table)
+
+    def add_page_number(canvas, doc):
+        canvas.saveState()
+        canvas.setFont('Helvetica', 8)
+        canvas.setFillColor(colors.HexColor('#7f8c8d'))
+        canvas.drawString(inch, 0.5*inch, f"Total de edificios: {len(edificios)}")
+        canvas.drawRightString(landscape(letter)[0] - inch, 0.5*inch, f"Página {doc.page}")
+        canvas.setStrokeColor(colors.black)
+        canvas.line(inch, inch, 3*inch, inch)
+        canvas.drawString(inch, 0.75*inch, "Responsable del reporte")
+        canvas.restoreState()
+
+    doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)
+
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="Acta de Reasignacion.pdf",
+        mimetype='application/pdf'
+    )    
+    
+        

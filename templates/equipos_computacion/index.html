@@ -1,193 +1,476 @@
 {% extends 'base.html' %}
 {% block title %}Equipos de Computacion{% endblock %}
-
 {% block content %}
-<div id="success-message"
-    style="background-color: #ffffff; color: #4b4d4b; padding: 10px; margin-top: 10px; border-radius: 5px; display: none;">
-    Inicio de sesión exitoso
+
+<div class="app-content content container-fluid">
+    <div class="content-wrapper">
+        <div class="content-header row">
+            <div class="content-header-left col-md-6 col-xs-12 mb-1">
+                <h2 class="content-header-title">Lista de Equipos de Computación</h2>
+            </div>
+            <div class="content-header-right breadcrumbs-right breadcrumbs-top col-md-6 col-xs-12">
+                <div class="breadcrumb-wrapper col-xs-12">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a>computadoras</a></li>
+                        <li class="breadcrumb-item active"><a href="#">Categorias</a></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div class="content-body">
+            <section id="basic-form-layouts">
+                <div class="row match-height">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="card-title" id="basic-layout-form">
+                                    <!-- Botón: Nuevo computadora -->
+                                    <a href="{{ url_for('computadora.create') }}" class="btn btn-success mb-3"
+                                        onclick="mostrarMensaje()">
+                                        <img src="{{ url_for('static', filename='img/mas.png') }}" alt="icono"
+                                            style="width: 24px; height: 24px; margin-right: 8px;">
+                                        Nueva Computadora
+                                    </a>
+
+                                    <!-- Botón: Incorporación -->
+                                    <a href="{{ url_for('computadora.incorporacion') }}" class="btn btn-info mb-3"
+                                        onclick="mostrarMensaje()">
+                                        <img src="{{ url_for('static', filename='img/print_2.png') }}" alt="icono"
+                                            style="width: 24px; height: 24px; margin-right: 8px;">
+                                        Incorporación
+                                    </a>
+
+                                    <!-- Botón: Costos Financieros -->
+                                    <a href="{{ url_for('computadora.financiero') }}" class="btn btn-info mb-3"
+                                        onclick="mostrarMensaje()">
+                                        <img src="{{ url_for('static', filename='img/print_2.png') }}" alt="icono"
+                                            style="width: 24px; height: 24px; margin-right: 8px;">
+                                        Costos Financieros
+                                    </a>
+
+                                    <!-------------------------------ASIGNACION computadora---------------------------------->
+                                    <a href="#" class="btn btn-info mb-3" data-toggle="modal"
+                                        data-target="#modalAsignacion">
+                                        <img src="{{ url_for('static', filename='img/C.png') }}" alt="icono"
+                                            style="width: 24px; height: 24px; margin-right: 8px;">
+                                        Asignacion Computadoras
+                                    </a>
+
+
+                                    <!-- Modal -->
+                                    <div class="modal fade text-xs-left" id="modalAsignacion" tabindex="-1"
+                                        role="dialog" aria-labelledby="modalAsignacionLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <form method="POST"
+                                                action="{{ url_for('computadora.imprimir_asignacion') }}"
+                                                target="_blank" class="w-100">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal"
+                                                            aria-label="Cerrar">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                        <h4 class="modal-title" id="modalAsignacionLabel">Asignar
+                                                            Computadoras</h4>
+                                                    </div>
+
+                                                    <div class="modal-body">
+                                                        <div class="form-group">
+                                                            <label for="funcionario">Nombre del Funcionario:</label>
+                                                            <input type="text" class="form-control" name="funcionario"
+                                                                id="funcionario" required>
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label for="cargo">Cargo del Funcionario:</label>
+                                                            <input type="text" class="form-control" name="cargo"
+                                                                id="cargo" required>
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label for="codigo_barras">Código de Barras:</label>
+                                                            <input type="text" class="form-control" name="codigo_barras"
+                                                                id="codigo_barras">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="modal-footer">
+                                                        <button type="submit" class="btn btn-outline-primary">Imprimir
+                                                            Acta</button>
+                                                        <button type="button" class="btn grey btn-outline-secondary"
+                                                            data-dismiss="modal">Cancelar</button>
+
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+
+
+                                    <!--------------------------------REASIGNACION DE computadoraS------------------------>
+                                    <!-- Botón para abrir el modal -->
+                                    <a href="#" class="btn btn-info mb-3" data-toggle="modal"
+                                        data-target="#modalReasignacion">
+                                        <img src="{{ url_for('static', filename='img/C1.png') }}" alt="icono"
+                                            style="width: 24px; height: 24px; margin-right: 8px;">
+                                        Reasignación Computadoras
+                                    </a>
+
+                                    <!-- Modal -->
+                                    <div class="modal fade text-xs-left" id="modalReasignacion" tabindex="-1"
+                                        role="dialog" aria-labelledby="modalReasignacionLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <form method="POST"
+                                                action="{{ url_for('computadora.imprimir_reasignacion') }}"
+                                                target="_blank" class="w-100">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal"
+                                                            aria-label="Cerrar">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                        <h4 class="modal-title" id="modalReasignacionLabel">Reasignar
+                                                            Computadoras</h4>
+                                                    </div>
+
+                                                    <div class="modal-body">
+                                                        <div class="form-group">
+                                                            <label for="funcionario">Nombre del Funcionario:</label>
+                                                            <input type="text" class="form-control" name="funcionario"
+                                                                id="funcionario" required>
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label for="cargo">Cargo del Funcionario:</label>
+                                                            <input type="text" class="form-control" name="cargo"
+                                                                id="cargo" required>
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label for="codigo_barras">Código de Barras:</label>
+                                                            <input type="text" class="form-control" name="codigo_barras"
+                                                                id="codigo_barras">
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label for="jefe_activos">Nombre Jefe de Activos
+                                                                Fijos:</label>
+                                                            <input type="text" class="form-control" name="jefe_activos"
+                                                                id="jefe_activos" required>
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label for="cargo_jefe">Cargo del Jefe de Activos
+                                                                Fijos:</label>
+                                                            <input type="text" class="form-control" name="cargo_jefe"
+                                                                id="cargo_jefe" required>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="modal-footer">
+                                                        <button type="submit" class="btn btn-outline-primary">Imprimir
+                                                            Acta</button>
+                                                        <button type="button" class="btn grey btn-outline-secondary"
+                                                            data-dismiss="modal">Cancelar</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    {% with messages = get_flashed_messages(with_categories=true) %}
+                                    {% if messages %}
+                                    {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        <strong>{{ category|capitalize }}:</strong> {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    {% endfor %}
+                                    {% endif %}
+                                    {% endwith %}
+
+
+                                    <!----------------------modal verificar---------------------------->
+                                    <a href="#" class="btn btn-info mb-3" data-toggle="modal" data-target="#verificar">
+                                        <img src="{{ url_for('static', filename='img/f.png') }}" alt="icono"
+                                            style="width: 24px; height: 24px; margin-right: 8px;">
+                                        Verificar QR
+                                    </a>
+                                    <!-- Modal para subir QR -->
+                                    <div class="modal fade" id="verificar" tabindex="-1" role="dialog"
+                                        aria-labelledby="verificarLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <form class="modal-content" method="POST"
+                                                action="{{ url_for('computadora.verificar_qr') }}"
+                                                enctype="multipart/form-data">
+
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="verificarLabel">Subir QR</h5>
+                                                    <button type="button" class="close" data-dismiss="modal"
+                                                        aria-label="Cerrar">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+
+                                                <div class="modal-body">
+                                                    <div class="form-group">
+                                                        <label for="qrImage">Selecciona una imagen QR:</label>
+                                                        <input type="file" class="form-control-file" id="qrImage"
+                                                            name="qrImage" accept="image/*" required>
+                                                    </div>
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-primary">Verificar</button>
+                                                </div>
+
+                                            </form>
+                                        </div>
+                                    </div>
+
+
+
+
+
+
+                                    <div class="card mb-2">
+                                        <div class="card-header  text-black">
+                                            <h5 class="">Búsqueda</h5>
+                                        </div>
+                                        <div class="card-body py-3">
+
+                                            <form method="GET" action="{{ url_for('computadora.index') }}"
+                                                class="form-row align-items-end" onsubmit="limpiarCampos()">
+
+                                                <div class="col-md-3 mb-2">
+                                                    <input type="text" name="codigo" id="codigo"
+                                                        class="form-control form-control-sm" placeholder="Código"
+                                                        value="{{ request.args.get('codigo', '') }}">
+                                                </div>
+
+                                                <div class="col-md-4 mb-2">
+                                                    <input type="text" name="descripcion" id="descripcion"
+                                                        class="form-control form-control-sm" placeholder="Descripción"
+                                                        value="{{ request.args.get('descripcion', '') }}">
+                                                </div>
+
+                                                <div class="col-md-3 mb-2">
+                                                    <input type="date" name="fecha" id="fecha"
+                                                        class="form-control form-control-sm"
+                                                        value="{{ request.args.get('fecha', '') }}">
+                                                </div>
+
+                                                <div class="col-md-2 mb-2">
+
+                                                    <button type="submit" class="btn btn-sm btn-primary btn-block">
+                                                        <img src="{{ url_for('static', filename='img/Pbuscar.ico') }}"
+                                                            alt="icono"
+                                                            style="width: 16px; height: 16px; margin-right: 9px;">
+                                                        Buscar
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+
+
+
+
+
+
+                                </h4>
+                                <a class="heading-elements-toggle"><i class="icon-ellipsis font-medium-3"></i></a>
+                                <div class="heading-elements">
+                                    <ul class="list-inline mb-0">
+                                        <li><a data-action="collapse"><i class="icon-minus4"></i></a></li>
+                                        <li><a data-action="expand"><i class="icon-expand2"></i></a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="card-body collapse in">
+                                <div class="card-block">
+                                    <div class="table-responsive">
+                                        <table id="table_computadora" class="table table-bordered table-sm">
+
+                                            <thead>
+
+                                                <tr>
+                                                    <th width="10">OP</th>
+                                                    <th width="10">ID</th>
+                                                    <th width="10%">DESCRIPCIÓN</th>
+                                                    <th width="10%">MARCA</th>
+                                                    <th width="10%">MODELO</th>
+                                                    <th width="10%">ESTADO</th>
+                                                    <th width="10%">FECHA INCORP.</th>
+                                                    <th width="10%">COSTO INICIAL</th>
+                                                    <th width="10%">FACTOR ACTUAL</th>
+                                                    <th width="10%">COSTO ACTUAL</th>
+                                                    <th width="10%">VIDA ÚTIL</th>
+                                                    <th width="10%">DEPREC. ACUM.</th>
+                                                    <th width="10%">NRO FACTURA</th>
+                                                    <th width="10%">VALOR NETO</th>
+                                                    <th width="10%">IMAGEN</th>
+                                                    <th width="10%">CARGO</th>
+                                                    <th width="10%">RESPONSABLE</th>
+                                                    <th width="10%">FASE</th>
+                                                    <th width="10%">QR</th>
+
+
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                {% for item in computadoras %}
+                                                <tr data-id="{{ item.id }}">
+                                                    <td>
+                                                        <div class="btn-group">
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                                data-toggle="dropdown" aria-haspopup="true"
+                                                                aria-expanded="false">
+                                                                <i class="fas fa-cog"></i> <!-- Ícono de engranaje -->
+                                                            </button>
+                                                            <div class="dropdown-menu dropdown-menu">
+                                                                <a class="dropdown-item text-primary"
+                                                                    href="{{ url_for('computadora.edit', id=item.id) }}">
+                                                                    <i class="fas fa-edit me-2"></i> Editar
+                                                                </a>
+                                                                <div class="dropdown-divider"></div>
+                                                                <a href="#" class="dropdown-item text-danger"
+                                                                    onclick="confirmarEliminacion(this)"
+                                                                    data-url="{{ url_for('computadora.delete', id=item.id) }}">
+                                                                    <i class="fas fa-trash-alt me-2"></i> Eliminar
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+
+                                                    <td>{{ item.id }}</td>
+                                                    <td>{{ item.descripcion }}</td>
+                                                    <td>{{ item.marca }}</td>
+                                                    <td>{{ item.modelo }}</td>
+                                                    <td>
+                                                        {% if item.estado.lower() == 'activo' %}
+                                                        <span>{{ item.estado }}</span>
+                                                        {% else %}
+                                                        <span>{{ item.estado }}</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ item.fecha_incorporacion.strftime('%d/%m/%Y') if
+                                                        item.fecha_incorporacion else '' }}</td>
+                                                    <td>Bs{{ "%.2f"|format(item.costo_inicial) }}</td>
+                                                    <td>{{
+                                                        "{:.7f}".format(item.factor_de_actualizacion).rstrip('0').rstrip('.')
+                                                        }}</td>
+                                                    <td>{{ "%.2f"|format(item.costo_actualizado) }}</td>
+                                                    <!--costo actualizado-->
+                                                    <td>{{ item.años_vida_util }} años</td>
+                                                    <td>Bs{{
+                                                        "{:.5f}".format(item.depreciacion_acumulada).rstrip('0').rstrip('.')
+                                                        }}</td>
+                                                    <td>{{ "%.2f"|format(item.factura) }}</td>
+
+                                                    <td>Bs{{ "%.2f"|format(item.valor_neto) }}</td><!--valor neto-->
+                                                    <td>
+                                                        {% if item.imagen %}
+                                                        <img src="{{ url_for('static', filename='uploads/' + item.imagen) }}"
+                                                            alt="Imagen del vehículo" class="img-thumbnail"
+                                                            style="max-width: 60px; max-height: 50px;">
+                                                        {% else %}
+                                                        <span class="text-muted fst-italic">Sin imagen</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ item.cargo or '-' }}</td>
+                                                    <td>{{ item.responsable or '-' }}</td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-success" style="font-size:11px;"
+                                                            onclick="
+                                                            if (this.classList.contains('btn-success')) {
+                                                                this.classList.remove('btn-success');
+                                                                this.classList.add('btn-danger');
+                                                                this.textContent = 'Inactivo';
+                                                            } else {
+                                                                this.classList.remove('btn-danger');
+                                                                this.classList.add('btn-success');
+                                                                this.textContent = 'Activo';
+                                                            }
+                                                            ">
+                                                            Activo
+                                                        </button>
+                                                    </td>
+                                                    <td>
+                                                        <a href="{{ url_for('static', filename='qr/computadora_' ~ item.id ~ '.png') }}"
+                                                            download="QR_computadora_{{ item.id }}.png"
+                                                            class="btn btn-sm btn-outline-secondary">
+                                                            <i class="fas fa-qrcode"></i>QR
+                                                        </a>
+                                                    </td>
+
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <th>OP</th>
+                                                    <th>ID</th>
+                                                    <th>DESCRIPCIÓN</th>
+                                                    <th>MARCA</th>
+                                                    <th>MODELO</th>
+                                                    <th>ESTADO</th>
+                                                    <th>FECHA INCORP.</th>
+                                                    <th>COSTO INICIAL</th>
+                                                    <th>FACTOR ACTUAL</th>
+                                                    <th>COSTO ACTUAL</th>
+                                                    <th>VIDA ÚTIL</th>
+                                                    <th>DEPREC. ACUM.</th>
+                                                    <th>NRO FACTURA</th>
+                                                    <th>VALOR NETO</th>
+                                                    <th>IMAGEN</th>
+                                                    <th>CARGO</th>
+                                                    <th>RESPONSABLE</th>
+                                                    <th>FASE</th>
+                                                    <th>QR</th>
+
+
+
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                        <br>
+                                        <br>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
 </div>
 
-<div style=" font-size: 16px; color: #020202; line-height: 2.2;">
-    <div><strong>Nombre:</strong> {{ current_user.name }}</div>
-    <div><strong>Usuario:</strong> {{ current_user.username }}</div>
-    <div><strong>Email:</strong> {{ current_user.email }}</div>
-    <a style="background-color: red; border-radius: 1rem;" href="{{ url_for('user.logout') }}"
-        class="btn btn-primary">Cerrar Sesión</a>
 
-</div>
-<!-- Mensaje temporal -->
 
-<script>
-    // Mostrar el mensaje
-    const msg = document.getElementById('success-message');
-    msg.style.display = 'block';
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 
-    // Ocultar después de 2 segundos (2000 ms)
-    setTimeout(() => {
-        msg.style.display = 'none';
-    }, 2000);
-</script>
-<div class="container">
-    <h1 class="my-4">Lista de Equipos de Computacion</h1>
+<script src="{{ url_for('static', filename='app-assets/plugins/DataTables/datatables.min.js') }}"></script>
+<script
+    src="{{ url_for('static', filename='app-assets/plugins/DataTables/DataTables-1.10.18/js/dataTables.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('static', filename='app-assets/plugins/toastr/toastr.min.js') }}"></script>
+<script src="{{ url_for('static', filename='app-assets/plugins/sweetalert2/dist/sweetalert2.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/Categoria.js') }}"></script>
+<link href="{{ url_for('static', filename='css/computadora.css') }}" rel="stylesheet">
 
-    <!-- Mensaje de impresión -->
-    <div id="mensaje-impresion" class="alert mt-2 d-none">
-        Generando reporte, por favor espere...
-    </div>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- Botones de acción -->
-    <div class="mb-4 d-flex flex-wrap gap-2">
-        <a href="{{ url_for('computadora.create') }}" class="btn btn-success">
-            <i class="fas fa-plus-circle me-1"></i> Nuevo Equipo
-        </a>
-        <a href="#" class="btn btn-primary">
-            <i class="fas fa-search me-1"></i> Buscar
-        </a>
-        <a href="#" class="btn btn-primary">
-            <i class="fas fa-search me-1"></i> Valor IA
-        </a>
-        <a href="{{ url_for('computadora.imprimir') }}" class="btn btn-primary" onclick="mostrarMensaje()">
-            <i class="fas fa-file-pdf me-1"></i> Imprimir
-        </a>
-        <button id="btn-editar" class="btn btn-warning" disabled>
-            <i class="fas fa-edit me-1"></i> Editar
-        </button>
-        <button id="btn-eliminar" class="btn btn-danger" disabled>
-            <i class="fas fa-trash me-1"></i> Eliminar
-        </button>
-    </div>
+<!-- Tu archivo JS personalizado -->
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 
-    <!-- Tabla de vehículos -->
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover align-middle text-center" id="tabla-computadoras">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Descripción</th>
-                    <th>Marca</th>
-                    <th>Modelo</th>
-                    <th>Estado</th>
-                    <th>Fecha Incorp.</th>
-                    <th>Costo Inicial</th>
-                    <th>Factor Actual.</th>
-                    <th>Costo Actual.</th>
-                    <th>Vida Útil</th>
-                    <th>Deprec. Acum.</th>
-                    <th>Valor Residual</th>
-                    <th>Valor Neto</th>
-                    <th>Imagen</th>
-                    <th>Cargo</th>
-                    <th>Responsable</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in computadoras %}
-                <tr data-id="{{ item.id }}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.descripcion }}</td>
-                    <td>{{ item.marca }}</td>
-                    <td>{{ item.modelo }}</td>
-                    <td>
-                        {% if item.estado.lower() == 'activo' %}
-                        <span>{{ item.estado }}</span>
-                        {% else %}
-                        <span>{{ item.estado }}</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ item.fecha_incorporacion.strftime('%d/%m/%Y') if item.fecha_incorporacion else '' }}</td>
-                    <td>Bs{{ "%.2f"|format(item.costo_inicial) }}</td>
-                    <td>{{ "%.0f"|format(item.factor_de_actualizacion * 100) }}%</td>
-                    <td>Bs{{ "%.2f"|format(item.costo_actualizado) }}</td>
-                    <td>{{ item.años_vida_util }} años</td>
-                    <td>Bs{{ "%.2f"|format(item.depreciacion_acumulada) }}</td>
-                    <td>Bs{{ "%.2f"|format(item.valor_residual) }}</td>
-                    <td>Bs{{ "%.2f"|format(item.valor_neto) }}</td>
-                    <td>
-                        {% if item.imagen %}
-                        <img src="{{ url_for('static', filename='uploads/' + item.imagen) }}" alt="Imagen del Equipo"
-                            class="img-thumbnail" style="max-width: 60px; max-height: 50px;">
-                        {% else %}
-                        <span class="text-muted fst-italic">Sin imagen</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ item.cargo or '-' }}</td>
-                    <td>{{ item.responsable or '-' }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
 
-<!-- Scripts -->
-<script>
-    let computadoraSeleccionado = null;
 
-    function mostrarMensaje() {
-        const mensaje = document.getElementById('mensaje-impresion');
-        mensaje.classList.remove('d-none');
-        setTimeout(() => mensaje.classList.add('d-none'), 1000);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const tabla = document.getElementById('tabla-computadoras');
-        const btnEditar = document.getElementById('btn-editar');
-        const btnEliminar = document.getElementById('btn-eliminar');
-
-        tabla.addEventListener('click', e => {
-            const fila = e.target.closest('tr[data-id]');
-            if (fila) {
-                tabla.querySelectorAll('tr').forEach(f => f.classList.remove('table-primary'));
-                fila.classList.add('table-primary');
-                computadoraSeleccionado = fila.dataset.id;
-
-                btnEditar.disabled = false;
-                btnEliminar.disabled = false;
-
-                btnEditar.onclick = () => window.location.href = `/computadoras/edit/${computadoraSeleccionado}`;
-                btnEliminar.onclick = () => {
-                    if (confirm('¿Está seguro que desea eliminar este vehículo?')) {
-                        window.location.href = `/computadoras/delete/${computadoraSeleccionado}`;
-                    }
-                };
-            }
-        });
-    });
-</script>
-
-<!-- Estilos -->
-<style>
-    .table-hover tbody tr:hover {
-        cursor: pointer;
-    }
-
-    button:disabled {
-        opacity: 0.6;
-        pointer-events: none;
-    }
-
-    img.img-thumbnail {
-        object-fit: cover;
-    }
-
-    /* Mensaje impresión gris plomo transparente */
-    #mensaje-impresion {
-        background-color: rgba(80, 80, 80, 0.9);
-        color: #fff;
-        border: none;
-        padding: 15px;
-        font-weight: bold;
-        text-align: center;
-        width: 100%;
-        border-radius: 8px;
-    }
-
-    @media (max-width: 768px) {
-
-        table th,
-        table td {
-            font-size: 0.85rem;
-        }
-    }
-</style>
 {% endblock %}
