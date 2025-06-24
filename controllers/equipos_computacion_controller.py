@@ -15,7 +15,7 @@ import json
 from flask_login import current_user
 import numpy as np
 import cv2
-import pyzbar.pyzbar as pyzbar
+
 
 computadora_bp = Blueprint('computadora', __name__, url_prefix='/computadoras')
 
