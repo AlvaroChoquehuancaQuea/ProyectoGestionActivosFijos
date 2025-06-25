@@ -16,7 +16,7 @@ import json
 
 import numpy as np
 import cv2
-import pyzbar.pyzbar as pyzbar
+
 
 edificio_bp = Blueprint('edificio', __name__, url_prefix='/edificios')
 

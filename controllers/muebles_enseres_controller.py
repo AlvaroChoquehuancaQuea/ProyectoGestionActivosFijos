@@ -11,7 +11,7 @@ import json
 from flask_login import current_user
 import numpy as np
 import cv2
-import pyzbar.pyzbar as pyzbar
+
 
 from io import BytesIO
 from reportlab.lib.pagesizes import letter, landscape

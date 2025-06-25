@@ -16,7 +16,7 @@ import json
 
 import numpy as np
 import cv2
-import pyzbar.pyzbar as pyzbar
+
 
 recreativo_bp = Blueprint('recreativo', __name__, url_prefix='/recreativos')
 
