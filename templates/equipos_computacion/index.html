@@ -50,12 +50,12 @@
                                     </a>
 
                                     <!-------------------------------ASIGNACION computadora---------------------------------->
-                                    <a href="#" class="btn btn-info mb-3" data-toggle="modal"
-                                        data-target="#modalAsignacion">
-                                        <img src="{{ url_for('static', filename='img/C.png') }}" alt="icono"
+                                     <button type="button" id="btn-asignar" class="btn btn-info mb-3" data-toggle="modal"
+                                        data-target="#modalAsignacion" disabled>
+                                        <img src="{{ url_for('static', filename='img/c.png') }}" alt="icono"
                                             style="width: 24px; height: 24px; margin-right: 8px;">
-                                        Asignacion Computadoras
-                                    </a>
+                                        Asignación Computadoras
+                                    </button>
 
 
                                     <!-- Modal -->
@@ -76,6 +76,8 @@
                                                     </div>
 
                                                     <div class="modal-body">
+                                                         <!-- Input oculto para el ID del vehículo -->
+                                                        <input type="hidden" name="computadora_id" id="computadora_id">
                                                         <div class="form-group">
                                                             <label for="funcionario">Nombre del Funcionario:</label>
                                                             <input type="text" class="form-control" name="funcionario"
@@ -110,12 +112,12 @@
 
                                     <!--------------------------------REASIGNACION DE computadoraS------------------------>
                                     <!-- Botón para abrir el modal -->
-                                    <a href="#" class="btn btn-info mb-3" data-toggle="modal"
-                                        data-target="#modalReasignacion">
+                                      <button type="button" id="btn-reasignar" class="btn btn-info mb-3"
+                                        data-toggle="modal" data-target="#modalReasignacion" disabled>
                                         <img src="{{ url_for('static', filename='img/C1.png') }}" alt="icono"
                                             style="width: 24px; height: 24px; margin-right: 8px;">
-                                        Reasignación Computadoras
-                                    </a>
+                                        Reasignar Computadoras
+                                    </button>
 
                                     <!-- Modal -->
                                     <div class="modal fade text-xs-left" id="modalReasignacion" tabindex="-1"
@@ -135,6 +137,9 @@
                                                     </div>
 
                                                     <div class="modal-body">
+                                                         <!-- Campos como funcionario, cargo, etc. -->
+                                                        <input type="hidden" name="computadora_id"
+                                                            id="computadora_id_reasignacion" value="">
                                                         <div class="form-group">
                                                             <label for="funcionario">Nombre del Funcionario:</label>
                                                             <input type="text" class="form-control" name="funcionario"
@@ -293,7 +298,7 @@
                             <div class="card-body collapse in">
                                 <div class="card-block">
                                     <div class="table-responsive">
-                                        <table id="table_computadora" class="table table-bordered table-sm">
+                                        <table id="table_computadora" class="table table-bordered table-hover align-middle text-center">
 
                                             <thead>
 
@@ -371,7 +376,7 @@
                                                     <td>Bs{{
                                                         "{:.5f}".format(item.depreciacion_acumulada).rstrip('0').rstrip('.')
                                                         }}</td>
-                                                    <td>{{ "%.2f"|format(item.factura) }}</td>
+                                                    <td>{{ (item.factura) }}</td>
 
                                                     <td>Bs{{ "%.2f"|format(item.valor_neto) }}</td><!--valor neto-->
                                                     <td>
@@ -452,7 +457,44 @@
         </div>
     </div>
 </div>
+<style>
+    .table-primary {
+        background-color: #cce5ff !important;
+    }
+</style>
+<!-- Scripts -->
+<script>
+    let computadoraSeleccionado = null;
 
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabla = document.getElementById('table_computadora');
+        const btnAsignar = document.getElementById('btn-asignar');
+        const btnReasignar = document.getElementById('btn-reasignar');
+
+        btnAsignar.disabled = true;
+        if (tabla) {
+            tabla.addEventListener('click', e => {
+                const fila = e.target.closest('tr[data-id]');
+                if (fila) {
+                    tabla.querySelectorAll('tr').forEach(f => f.classList.remove('table-primary'));
+                    fila.classList.add('table-primary');
+                    computadoraSeleccionado = fila.dataset.id;
+                    console.log('Vehículo seleccionado:', computadoraSeleccionado);
+                    btnAsignar.disabled = false;
+                    btnReasignar.disabled = false;
+                }
+            });
+        }
+
+        $('#modalAsignacion').on('show.bs.modal', function () {
+            document.getElementById('computadora_id').value = computadoraSeleccionado;
+        });
+
+        $('#modalReasignacion').on('show.bs.modal', function () {
+            document.getElementById('computadora_id_reasignacion').value = computadoraSeleccionado;
+        });
+    });
+</script>
 
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />

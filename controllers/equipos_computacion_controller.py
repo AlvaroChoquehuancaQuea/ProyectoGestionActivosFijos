@@ -15,7 +15,7 @@ import json
 from flask_login import current_user
 import numpy as np
 import cv2
-
+import pyzbar.pyzbar as pyzbar
 
 computadora_bp = Blueprint('computadora', __name__, url_prefix='/computadoras')
 
@@ -252,7 +252,7 @@ def imprimir():
             spaceAfter=12
         )
         fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
-        info_empresa = Paragraph("Sistema de Revalorización de Activos Fijos", info_style)
+        info_empresa = Paragraph("Gestion de Activos Fijos", info_style)
         info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", info_style)
         elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
 
@@ -410,11 +410,11 @@ def incorporacion():
         textColor=colors.HexColor('#2c3e50'),
         spaceAfter=20
     )
-    title = Paragraph("INCORPORACIÓN Y REGISTRO DE ACTIVO FIJO", title_style)
+    title = Paragraph("INCORPORACIÓN Y REGISTRO DE ACTIVO FIJO EQUIPOS DE COMPUTACIÓN", title_style)
     elements.append(title)
 
     fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
-    info_empresa = Paragraph("Sistema de Revalorización de Activos Fijos", styles['Normal'])
+    info_empresa = Paragraph("Gestion de Activos Fijos", styles['Normal'])
     info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal'])
     elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
 
@@ -534,11 +534,11 @@ def financiero():
         textColor=colors.HexColor('#2c3e50'),
         spaceAfter=20
     )
-    title = Paragraph("DETERMINACIÓN DE COSTOS DE ACTIVO FIJO PARA ESTADOS FINANCIEROS", title_style)
+    title = Paragraph("DETERMINACIÓN DE COSTOS DE EQUIPOS DE COMPUTACIÓN COMO ACTIVO FIJO PARA ESTADOS FINANCIEROS", title_style)
     elements.append(title)
 
     fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
-    info_empresa = Paragraph("Sistema de Revalorización de Activos Fijos", styles['Normal'])
+    info_empresa = Paragraph("Gestion de Activos Fijos", styles['Normal'])
     info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal'])
     elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
 
@@ -652,8 +652,18 @@ def imprimir_asignacion():
     funcionario = request.form['funcionario']
     cargo = request.form['cargo']
     codigo_barras = request.form['codigo_barras']
+     #cambios echos
+    computadora_id = request.form.get('computadora_id')
     
-    computadoras = Computadora.get_all()
+    if not computadora_id:
+        return "Error: No se recibió el ID del vehículo.", 400
+    
+    #cambios echos
+    computadora = Computadora.get_by_id(int(computadora_id))
+    if not computadora:
+        return "Error: Vehículo no encontrado.", 404
+    
+
     buffer = BytesIO()
 
     doc = SimpleDocTemplate(
@@ -676,11 +686,11 @@ def imprimir_asignacion():
         textColor=colors.HexColor('#2c3e50'),
         spaceAfter=20
     )
-    title = Paragraph("ACTA DE ASIGNACIÓN DE ACTIVO FIJO", title_style)
+    title = Paragraph("ACTA DE ASIGNACIÓN DE ACTIVO FIJO EQUIPOS DE COMPUTACIÓN", title_style)
     elements.append(title)
 
     fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
-    info_empresa = Paragraph("Sistema de Revalorización de Activos Fijos", styles['Normal'])
+    info_empresa = Paragraph("Gestion de Activos Fijos", styles['Normal'])
     info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal'])
     elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
 
@@ -714,19 +724,19 @@ def imprimir_asignacion():
         leading=10
     )
     data = [headers]
-    for v in computadoras:
-        data.append([
-            Paragraph(v.descripcion, normal_style),
-            Paragraph(v.marca, normal_style),
-            Paragraph(v.modelo, normal_style),
-            Paragraph(v.estado, normal_style),
-            Paragraph(v.fecha_incorporacion.strftime("%d/%m/%Y") if v.fecha_incorporacion else "", normal_style),
+    
+    data.append([
+            Paragraph(computadora.descripcion, normal_style),
+            Paragraph(computadora.marca, normal_style),
+            Paragraph(computadora.modelo, normal_style),
+            Paragraph(computadora.estado, normal_style),
+            Paragraph(computadora.fecha_incorporacion.strftime("%d/%m/%Y") if computadora.fecha_incorporacion else "", normal_style),
             Paragraph(funcionario, normal_style),
             Paragraph(cargo, normal_style),
-            Paragraph(v.responsable if v.responsable else "—", normal_style),
-            Paragraph(v.cargo if v.cargo else "—", normal_style),
+            Paragraph(computadora.responsable if computadora.responsable else "—", normal_style),
+            Paragraph(computadora.cargo if computadora.cargo else "—", normal_style),
             Paragraph(codigo_barras, normal_style)
-        ])
+    ])
 
     table = Table(data, colWidths=[
            1.0*inch,  # Descripción
@@ -762,11 +772,11 @@ def imprimir_asignacion():
         canvas.saveState()
         canvas.setFont('Helvetica', 8)
         canvas.setFillColor(colors.HexColor('#7f8c8d'))
-        canvas.drawString(inch, 0.5*inch, f"Total de computadoras: {len(computadoras)}")
+        canvas.drawString(inch, 0.5*inch, f"Total de computadoras:1")
         canvas.drawRightString(landscape(letter)[0] - inch, 0.5*inch, f"Página {doc.page}")
         canvas.setStrokeColor(colors.black)
         canvas.line(inch, inch, 3*inch, inch)
-        canvas.drawString(inch, 0.75*inch, "Responsable del reporte")
+        canvas.drawString(inch, 0.75*inch, "Firma del Autor")
         canvas.restoreState()
 
     doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)
@@ -797,8 +807,16 @@ def imprimir_reasignacion():
     funcionario = request.form['funcionario']
     cargo = request.form['cargo']
     codigo_barras = request.form['codigo_barras']
+     #cambios echos
+    computadora_id = request.form.get('computadora_id')
+    if not computadora_id:
+        return "Error: No se recibió el ID del vehículo.", 400
     
-    computadoras = Computadora.get_all()
+    #cambios echos
+    computadora = Computadora.get_by_id(int(computadora_id))
+    if not computadora:
+        return "Error: Vehículo no encontrado.", 404
+ 
     buffer = BytesIO()
 
     doc = SimpleDocTemplate(
@@ -821,11 +839,11 @@ def imprimir_reasignacion():
         textColor=colors.HexColor('#2c3e50'),
         spaceAfter=20
     )
-    title = Paragraph("ACTA DE REASIGNACIÓN DE ACTIVO FIJO", title_style)
+    title = Paragraph("ACTA DE REASIGNACIÓN DE ACTIVO FIJO EQUIPOS DE COMPUTACIÓN", title_style)
     elements.append(title)
 
     fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
-    info_empresa = Paragraph("Sistema de Revalorización de Activos Fijos", styles['Normal'])
+    info_empresa = Paragraph("Gestion de Activos Fijos", styles['Normal'])
     info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal'])
     elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
 
@@ -859,19 +877,19 @@ def imprimir_reasignacion():
         leading=10
     )
     data = [headers]
-    for v in computadoras:
-        data.append([
-            Paragraph(v.descripcion, normal_style),
-            Paragraph(v.marca, normal_style),
-            Paragraph(v.modelo, normal_style),
-            Paragraph(v.estado, normal_style),
-            Paragraph(v.fecha_incorporacion.strftime("%d/%m/%Y") if v.fecha_incorporacion else "", normal_style),
+    
+    data.append([
+            Paragraph(computadora.descripcion, normal_style),
+            Paragraph(computadora.marca, normal_style),
+            Paragraph(computadora.modelo, normal_style),
+            Paragraph(computadora.estado, normal_style),
+            Paragraph(computadora.fecha_incorporacion.strftime("%d/%m/%Y") if computadora.fecha_incorporacion else "", normal_style),
             Paragraph(funcionario, normal_style),
             Paragraph(cargo, normal_style),
             Paragraph(jefe_activo,normal_style),
             Paragraph(cargo_jefe,normal_style),
             Paragraph(codigo_barras, normal_style)
-        ])
+    ])
 
     table = Table(data, colWidths=[
            1.0*inch,  # Descripción
@@ -907,11 +925,11 @@ def imprimir_reasignacion():
         canvas.saveState()
         canvas.setFont('Helvetica', 8)
         canvas.setFillColor(colors.HexColor('#7f8c8d'))
-        canvas.drawString(inch, 0.5*inch, f"Total de computadoras: {len(computadoras)}")
+        canvas.drawString(inch, 0.5*inch, f"Total de Equipos de Computacion:1")
         canvas.drawRightString(landscape(letter)[0] - inch, 0.5*inch, f"Página {doc.page}")
         canvas.setStrokeColor(colors.black)
         canvas.line(inch, inch, 3*inch, inch)
-        canvas.drawString(inch, 0.75*inch, "Responsable del reporte")
+        canvas.drawString(inch, 0.75*inch, "Firma del Autor")
         canvas.restoreState()
 
     doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)

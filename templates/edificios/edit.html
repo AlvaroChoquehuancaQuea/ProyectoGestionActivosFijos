@@ -17,9 +17,9 @@
                             value="{{ edificio.descripcion }}">
                     </div>
                     <div class="col-md-3">
-                        <label for="categoria" class="form-label">Categoria:</label>
-                        <input type="text" class="form-control" id="categoria" name="categoria" required
-                            value="{{ edificio.categoria }}">
+                        <label for="edificacion" class="form-label">Edificacion:</label>
+                        <input type="text" class="form-control" id="edificacion" name="edificacion" required
+                            value="{{ edificio.edificacion }}">
                     </div>
                     <div class="col-md-3">
                         <label for="uso" class="form-label">Uso:</label>
@@ -82,7 +82,7 @@
                     </div>
                     <div class="col-md-4">
                         <label for="años_vida_util" class="form-label">Años de Vida Útil:</label>
-                        <input type="number" class="form-control" id="años_vida_util" name="años_vida_util" min="0"
+                        <input type="number" class="form-control" id="años_vida_util" name="años_vida_util" min="1"
                             required value="{{ edificio.años_vida_util }}">
                     </div>
                 </div>

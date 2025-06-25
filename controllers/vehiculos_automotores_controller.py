@@ -16,7 +16,7 @@ from flask_login import current_user
 
 import numpy as np
 import cv2
-
+import pyzbar.pyzbar as pyzbar
 
 vehiculo_bp = Blueprint('vehiculo', __name__, url_prefix='/vehiculos')
 
@@ -260,7 +260,7 @@ def imprimir():
             spaceAfter=12
         )
         fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
-        info_empresa = Paragraph("Sistema de Revalorización de Activos Fijos", info_style)
+        info_empresa = Paragraph("Gestion de Activos Fijos", info_style)
         info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", info_style)
         elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
 
@@ -384,6 +384,7 @@ def delete(id):
 
 
 
+
 @vehiculo_bp.route('/incorporacion')
 def incorporacion():
     vehiculos = Vehiculo.get_all()
@@ -409,11 +410,11 @@ def incorporacion():
         textColor=colors.HexColor('#2c3e50'),
         spaceAfter=20
     )
-    title = Paragraph("INCORPORACIÓN Y REGISTRO DE ACTIVO FIJO", title_style)
+    title = Paragraph("INCORPORACIÓN Y REGISTRO DE ACTIVO FIJO VEHÍCULOS", title_style)
     elements.append(title)
 
     fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
-    info_empresa = Paragraph("Sistema de Revalorización de Activos Fijos", styles['Normal'])
+    info_empresa = Paragraph("Gestión de Activos Fijos", styles['Normal'])
     info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal'])
     elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
 
@@ -425,6 +426,7 @@ def incorporacion():
         alignment=1,
         backColor=colors.HexColor('#3498db')
     )
+
     headers = [
         Paragraph("<b>Descripción</b>", header_style),
         Paragraph("<b>Marca</b>", header_style),
@@ -435,10 +437,15 @@ def incorporacion():
         Paragraph("<b>Imagen</b>", header_style),
         Paragraph("<b>Años de Vida Útil</b>", header_style)
     ]
+
     def formatear_variable(valor):
         return f"{valor:.5f}".rstrip('0').rstrip('.')
 
     data = [headers]
+
+    # Inicializar total
+    total_costo_inicial = 0
+
     for v in vehiculos:
         # Ruta absoluta a la imagen
         ruta_imagen = os.path.join(current_app.root_path, 'static', 'uploads', v.imagen or '')
@@ -461,10 +468,21 @@ def incorporacion():
             f"{v.años_vida_util} años"
         ])
 
+        total_costo_inicial += v.costo_inicial
+
+    # Fila de Total
+    data.append([
+        Paragraph("<b>TOTAL</b>", styles['Normal']),
+        '', '', '', '', 
+        f"Bs{formatear_variable(total_costo_inicial)}",
+        '', ''
+    ])
+
     table = Table(data, colWidths=[
         1.8*inch, 1*inch, 1*inch, 1*inch,
         1.4*inch, 1.2*inch, 1*inch, 1.2*inch
     ])
+
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -472,17 +490,30 @@ def incorporacion():
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -2), 10),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.white),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#ecf0f1')),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#f9f9f9'), colors.white])
+        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.HexColor('#f9f9f9'), colors.white]),
+        # Estilo para la fila TOTAL
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#dfe6e9')),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
     ]))
 
     elements.append(table)
 
+    # Párrafo resumen debajo de la tabla
+    total_paragraph = Paragraph(
+        f"<b>Total de vehículos:</b> {len(vehiculos)} | "
+        f"<b>Suma Costo Inicial:</b> Bs{formatear_variable(total_costo_inicial)}",
+        styles['Normal']
+    )
+    elements.append(Spacer(1, 12))
+    elements.append(total_paragraph)
+
+    # Función para numerar las páginas
     def add_page_number(canvas, doc):
         canvas.saveState()
         canvas.setFont('Helvetica', 8)
@@ -503,8 +534,6 @@ def incorporacion():
         download_name="incorporacion.pdf",
         mimetype='application/pdf'
     )
-
-
 
 
 
@@ -533,11 +562,11 @@ def financiero():
         textColor=colors.HexColor('#2c3e50'),
         spaceAfter=20
     )
-    title = Paragraph("DETERMINACIÓN DE COSTOS DE ACTIVO FIJO PARA ESTADOS FINANCIEROS", title_style)
+    title = Paragraph("DETERMINACIÓN DE COSTOS DE VEHÍCULOS COMO ACTIVO FIJO PARA ESTADOS FINANCIEROS", title_style)
     elements.append(title)
 
     fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
-    info_empresa = Paragraph("Sistema de Revalorización de Activos Fijos", styles['Normal'])
+    info_empresa = Paragraph("Gestión de Activos Fijos", styles['Normal'])
     info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal'])
     elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
 
@@ -549,6 +578,7 @@ def financiero():
         alignment=1,
         backColor=colors.HexColor('#3498db')
     )
+
     headers = [
         Paragraph("<b>Descripción</b>", header_style),
         Paragraph("<b>Marca</b>", header_style),
@@ -559,12 +589,20 @@ def financiero():
         Paragraph("<b>Fac. Actualización</b>", header_style),
         Paragraph("<b>Costo Actualizado</b>", header_style),
         Paragraph("<b>Depreciación Acumulada</b>", header_style),
-        Paragraph("<b>Valor Neto</b>", header_style)  
+        Paragraph("<b>Valor Neto</b>", header_style)
     ]
+
     def formatear_variable(valor):
         return f"{valor:.5f}".rstrip('0').rstrip('.')
 
     data = [headers]
+
+    # Calcular totales
+    total_costo_inicial = 0
+    total_costo_actualizado = 0
+    total_depreciacion_acumulada = 0
+    total_valor_neto = 0
+
     for v in vehiculos:
         data.append([
             v.descripcion,
@@ -579,18 +617,35 @@ def financiero():
             f"Bs{formatear_variable(v.valor_neto)}"
         ])
 
-    table = Table(data, colWidths=[
-           1.0*inch,  # Descripción
-            0.9*inch,  # Marca
-            0.8*inch,  # Modelo
-            0.8*inch,  # Estado
-            1.1*inch,  # Fecha
-            1.2*inch,  # Costo Inicial
-            1.0*inch,  # Factor de Actualización
-            1.1*inch,  # Costo Actualizado
-            1.2*inch,  # Depreciación Acumulada
-            1.2*inch  
+        total_costo_inicial += v.costo_inicial
+        total_costo_actualizado += v.costo_actualizado
+        total_depreciacion_acumulada += v.depreciacion_acumulada
+        total_valor_neto += v.valor_neto
+
+    # Fila de Totales
+    data.append([
+        Paragraph("<b>TOTAL</b>", styles['Normal']),
+        '', '', '', '',  # Celdas vacías
+        f"Bs{formatear_variable(total_costo_inicial)}",
+        '',
+        f"Bs{formatear_variable(total_costo_actualizado)}",
+        f"Bs{formatear_variable(total_depreciacion_acumulada)}",
+        f"Bs{formatear_variable(total_valor_neto)}"
     ])
+
+    table = Table(data, colWidths=[
+        1.0*inch,  # Descripción
+        0.9*inch,  # Marca
+        0.8*inch,  # Modelo
+        0.8*inch,  # Estado
+        1.1*inch,  # Fecha
+        1.2*inch,  # Costo Inicial
+        1.0*inch,  # Factor de Actualización
+        1.1*inch,  # Costo Actualizado
+        1.2*inch,  # Depreciación Acumulada
+        1.2*inch   # Valor Neto
+    ])
+
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -598,17 +653,30 @@ def financiero():
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -2), 9),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.white),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#ecf0f1')),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#f9f9f9'), colors.white])
+        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.HexColor('#f9f9f9'), colors.white]),
+        # Estilo para la fila TOTAL
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#dfe6e9')),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
     ]))
 
     elements.append(table)
 
+    # Párrafo resumen debajo de la tabla
+    total_paragraph = Paragraph(
+        f"<b>Total de vehículos:</b> {len(vehiculos)} | "
+        f"<b>Suma Valor Neto:</b> Bs{formatear_variable(total_valor_neto)}",
+        styles['Normal']
+    )
+    elements.append(Spacer(1, 12))
+    elements.append(total_paragraph)
+
+    # Función para numerar las páginas
     def add_page_number(canvas, doc):
         canvas.saveState()
         canvas.setFont('Helvetica', 8)
@@ -629,6 +697,9 @@ def financiero():
         download_name="financiero.pdf",
         mimetype='application/pdf'
     )
+
+
+
 
 @vehiculo_bp.route('/asignacion', methods=['GET'])
 def asignacion():
@@ -651,8 +722,17 @@ def imprimir_asignacion():
     funcionario = request.form['funcionario']
     cargo = request.form['cargo']
     codigo_barras = request.form['codigo_barras']
+    #cambios echos
+    vehiculo_id = request.form.get('vehiculo_id')
     
-    vehiculos = Vehiculo.get_all()
+    if not vehiculo_id:
+        return "Error: No se recibió el ID del vehículo.", 400
+    
+    #cambios echos
+    vehiculo = Vehiculo.get_by_id(int(vehiculo_id))
+    if not vehiculo:
+        return "Error: Vehículo no encontrado.", 404
+       
     buffer = BytesIO()
 
     doc = SimpleDocTemplate(
@@ -675,11 +755,11 @@ def imprimir_asignacion():
         textColor=colors.HexColor('#2c3e50'),
         spaceAfter=20
     )
-    title = Paragraph("ACTA DE ASIGNACIÓN DE ACTIVO FIJO", title_style)
+    title = Paragraph("ACTA DE ASIGNACIÓN DE ACTIVOS FIJOS VEHÍCULOS", title_style)
     elements.append(title)
 
     fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
-    info_empresa = Paragraph("Sistema de Revalorización de Activos Fijos", styles['Normal'])
+    info_empresa = Paragraph("Gestion de Activos Fijos", styles['Normal'])
     info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal'])
     elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
 
@@ -713,19 +793,19 @@ def imprimir_asignacion():
         leading=10
     )
     data = [headers]
-    for v in vehiculos:
-        data.append([
-            Paragraph(v.descripcion, normal_style),
-            Paragraph(v.marca, normal_style),
-            Paragraph(v.modelo, normal_style),
-            Paragraph(v.estado, normal_style),
-            Paragraph(v.fecha_incorporacion.strftime("%d/%m/%Y") if v.fecha_incorporacion else "", normal_style),
-            Paragraph(funcionario, normal_style),
-            Paragraph(cargo, normal_style),
-            Paragraph(v.responsable if v.responsable else "—", normal_style),
-            Paragraph(v.cargo if v.cargo else "—", normal_style),
-            Paragraph(codigo_barras, normal_style)
-        ])
+    
+    data.append([
+        Paragraph(vehiculo.descripcion, normal_style),
+        Paragraph(vehiculo.marca, normal_style),
+        Paragraph(vehiculo.modelo, normal_style),
+        Paragraph(vehiculo.estado, normal_style),
+        Paragraph(vehiculo.fecha_incorporacion.strftime("%d/%m/%Y") if vehiculo.fecha_incorporacion else "", normal_style),
+        Paragraph(funcionario, normal_style),
+        Paragraph(cargo, normal_style),
+        Paragraph(vehiculo.responsable if vehiculo.responsable else "—", normal_style),
+        Paragraph(vehiculo.cargo if vehiculo.cargo else "—", normal_style),
+        Paragraph(codigo_barras, normal_style)
+    ])
 
     table = Table(data, colWidths=[
            1.0*inch,  # Descripción
@@ -761,11 +841,11 @@ def imprimir_asignacion():
         canvas.saveState()
         canvas.setFont('Helvetica', 8)
         canvas.setFillColor(colors.HexColor('#7f8c8d'))
-        canvas.drawString(inch, 0.5*inch, f"Total de vehículos: {len(vehiculos)}")
-        canvas.drawRightString(landscape(letter)[0] - inch, 0.5*inch, f"Página {doc.page}")
+        canvas.drawString(inch, 0.5*inch, "Total de vehículos: 1")
+        #canvas.drawRightString(landscape(letter)[0] - inch, 0.5*inch, f"Página {doc.page}")
         canvas.setStrokeColor(colors.black)
         canvas.line(inch, inch, 3*inch, inch)
-        canvas.drawString(inch, 0.75*inch, "Responsable del reporte")
+        canvas.drawString(inch, 0.75*inch, "Firma del Autor")
         canvas.restoreState()
 
     doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)
@@ -797,7 +877,16 @@ def imprimir_reasignacion():
     cargo = request.form['cargo']
     codigo_barras = request.form['codigo_barras']
     
-    vehiculos = Vehiculo.get_all()
+    #cambios echos
+    vehiculo_id = request.form.get('vehiculo_id')
+    if not vehiculo_id:
+        return "Error: No se recibió el ID del vehículo.", 400
+    
+    #cambios echos
+    vehiculo = Vehiculo.get_by_id(int(vehiculo_id))
+    if not vehiculo:
+        return "Error: Vehículo no encontrado.", 404
+    
     buffer = BytesIO()
 
     doc = SimpleDocTemplate(
@@ -820,11 +909,11 @@ def imprimir_reasignacion():
         textColor=colors.HexColor('#2c3e50'),
         spaceAfter=20
     )
-    title = Paragraph("ACTA DE REASIGNACIÓN DE ACTIVO FIJO", title_style)
+    title = Paragraph("ACTA DE REASIGNACIÓN DE ACTIVO FIJO VEHICULOS", title_style)
     elements.append(title)
 
     fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
-    info_empresa = Paragraph("Sistema de Revalorización de Activos Fijos", styles['Normal'])
+    info_empresa = Paragraph("Gestion de Activos Fijos", styles['Normal'])
     info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal'])
     elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
 
@@ -858,19 +947,19 @@ def imprimir_reasignacion():
         leading=10
     )
     data = [headers]
-    for v in vehiculos:
-        data.append([
-            Paragraph(v.descripcion, normal_style),
-            Paragraph(v.marca, normal_style),
-            Paragraph(v.modelo, normal_style),
-            Paragraph(v.estado, normal_style),
-            Paragraph(v.fecha_incorporacion.strftime("%d/%m/%Y") if v.fecha_incorporacion else "", normal_style),
+    
+    data.append([
+            Paragraph(vehiculo.descripcion, normal_style),
+            Paragraph(vehiculo.marca, normal_style),
+            Paragraph(vehiculo.modelo, normal_style),
+            Paragraph(vehiculo.estado, normal_style),
+            Paragraph(vehiculo.fecha_incorporacion.strftime("%d/%m/%Y") if vehiculo.fecha_incorporacion else "", normal_style),
             Paragraph(funcionario, normal_style),
             Paragraph(cargo, normal_style),
             Paragraph(jefe_activo,normal_style),
             Paragraph(cargo_jefe,normal_style),
             Paragraph(codigo_barras, normal_style)
-        ])
+    ])
 
     table = Table(data, colWidths=[
            1.0*inch,  # Descripción
@@ -906,11 +995,12 @@ def imprimir_reasignacion():
         canvas.saveState()
         canvas.setFont('Helvetica', 8)
         canvas.setFillColor(colors.HexColor('#7f8c8d'))
-        canvas.drawString(inch, 0.5*inch, f"Total de vehículos: {len(vehiculos)}")
+        canvas.drawString(inch, 0.5*inch, f"Total de vehículos:1")
         canvas.drawRightString(landscape(letter)[0] - inch, 0.5*inch, f"Página {doc.page}")
         canvas.setStrokeColor(colors.black)
         canvas.line(inch, inch, 3*inch, inch)
-        canvas.drawString(inch, 0.75*inch, "Responsable del reporte")
+        canvas.drawString(inch, 0.75*inch, "Firma del Autor")
+
         canvas.restoreState()
 
     doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)
