@@ -400,7 +400,6 @@ def delete(id):
 
 
 ##################################REPORTES############
-
 @mueble_bp.route('/incorporacion')
 def incorporacion():
     muebles = Mueble.get_all()
@@ -426,11 +425,11 @@ def incorporacion():
         textColor=colors.HexColor('#2c3e50'),
         spaceAfter=20
     )
-    title = Paragraph("INCORPORACIÓN Y REGISTRO DE ACTIVO FIJO MUEBLES ENSERES DE OFICINA", title_style)
+    title = Paragraph("INCORPORACIÓN Y REGISTRO DE ACTIVO FIJO MUEBLES Y ENSERES DE OFICINA", title_style)
     elements.append(title)
 
     fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
-    info_empresa = Paragraph("Gestion de Activos Fijos", styles['Normal'])
+    info_empresa = Paragraph("Gestión de Activos Fijos", styles['Normal'])
     info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal'])
     elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
 
@@ -442,9 +441,10 @@ def incorporacion():
         alignment=1,
         backColor=colors.HexColor('#3498db')
     )
+
     headers = [
         Paragraph("<b>Descripción</b>", header_style),
-        Paragraph("<b>Categoria</b>", header_style),
+        Paragraph("<b>Marca</b>", header_style),
         Paragraph("<b>Modelo</b>", header_style),
         Paragraph("<b>Estado</b>", header_style),
         Paragraph("<b>Fecha de Incorporación</b>", header_style),
@@ -452,10 +452,15 @@ def incorporacion():
         Paragraph("<b>Imagen</b>", header_style),
         Paragraph("<b>Años de Vida Útil</b>", header_style)
     ]
+
     def formatear_variable(valor):
         return f"{valor:.5f}".rstrip('0').rstrip('.')
 
     data = [headers]
+
+    # Inicializar total
+    total_costo_inicial = 0
+
     for v in muebles:
         # Ruta absoluta a la imagen
         ruta_imagen = os.path.join(current_app.root_path, 'static', 'uploads', v.imagen or '')
@@ -478,10 +483,21 @@ def incorporacion():
             f"{v.años_vida_util} años"
         ])
 
+        total_costo_inicial += v.costo_inicial
+
+    # Fila de Total
+    data.append([
+        Paragraph("<b>TOTAL</b>", styles['Normal']),
+        '', '', '', '', 
+        f"Bs{formatear_variable(total_costo_inicial)}",
+        '', ''
+    ])
+
     table = Table(data, colWidths=[
         1.8*inch, 1*inch, 1*inch, 1*inch,
         1.4*inch, 1.2*inch, 1*inch, 1.2*inch
     ])
+
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -489,22 +505,35 @@ def incorporacion():
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -2), 10),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.white),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#ecf0f1')),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#f9f9f9'), colors.white])
+        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.HexColor('#f9f9f9'), colors.white]),
+        # Estilo para la fila TOTAL
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#dfe6e9')),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
     ]))
 
     elements.append(table)
 
+    # Párrafo resumen debajo de la tabla
+    total_paragraph = Paragraph(
+        f"<b>Total de Muebles:</b> {len(muebles)} | "
+        f"<b>Suma Costo Inicial:</b> Bs{formatear_variable(total_costo_inicial)}",
+        styles['Normal']
+    )
+    elements.append(Spacer(1, 12))
+    elements.append(total_paragraph)
+
+    # Función para numerar las páginas
     def add_page_number(canvas, doc):
         canvas.saveState()
         canvas.setFont('Helvetica', 8)
         canvas.setFillColor(colors.HexColor('#7f8c8d'))
-        canvas.drawString(inch, 0.5*inch, f"Total de muebles: {len(muebles)}")
+        canvas.drawString(inch, 0.5*inch, f"Total de Muebles: {len(muebles)}")
         canvas.drawRightString(landscape(letter)[0] - inch, 0.5*inch, f"Página {doc.page}")
         canvas.setStrokeColor(colors.black)
         canvas.line(inch, inch, 3*inch, inch)
@@ -520,6 +549,7 @@ def incorporacion():
         download_name="incorporacion.pdf",
         mimetype='application/pdf'
     )
+
 
 
 
@@ -554,7 +584,7 @@ def financiero():
     elements.append(title)
 
     fecha_str = datetime.now().strftime('%d/%m/%Y %H:%M')
-    info_empresa = Paragraph("Gestion de Activos Fijos", styles['Normal'])
+    info_empresa = Paragraph("Gestión de Activos Fijos", styles['Normal'])
     info_fecha = Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal'])
     elements.extend([info_empresa, info_fecha, Spacer(1, 12)])
 
@@ -566,6 +596,7 @@ def financiero():
         alignment=1,
         backColor=colors.HexColor('#3498db')
     )
+
     headers = [
         Paragraph("<b>Descripción</b>", header_style),
         Paragraph("<b>Categoria</b>", header_style),
@@ -576,12 +607,20 @@ def financiero():
         Paragraph("<b>Fac. Actualización</b>", header_style),
         Paragraph("<b>Costo Actualizado</b>", header_style),
         Paragraph("<b>Depreciación Acumulada</b>", header_style),
-        Paragraph("<b>Valor Neto</b>", header_style)  
+        Paragraph("<b>Valor Neto</b>", header_style)
     ]
+
     def formatear_variable(valor):
         return f"{valor:.5f}".rstrip('0').rstrip('.')
 
     data = [headers]
+
+    # Calcular totales
+    total_costo_inicial = 0
+    total_costo_actualizado = 0
+    total_depreciacion_acumulada = 0
+    total_valor_neto = 0
+
     for v in muebles:
         data.append([
             v.descripcion,
@@ -596,18 +635,35 @@ def financiero():
             f"Bs{formatear_variable(v.valor_neto)}"
         ])
 
-    table = Table(data, colWidths=[
-           1.0*inch,  # Descripción
-            0.9*inch,  # categoria
-            0.8*inch,  # Modelo
-            0.8*inch,  # Estado
-            1.1*inch,  # Fecha
-            1.2*inch,  # Costo Inicial
-            1.0*inch,  # Factor de Actualización
-            1.1*inch,  # Costo Actualizado
-            1.2*inch,  # Depreciación Acumulada
-            1.2*inch  
+        total_costo_inicial += v.costo_inicial
+        total_costo_actualizado += v.costo_actualizado
+        total_depreciacion_acumulada += v.depreciacion_acumulada
+        total_valor_neto += v.valor_neto
+
+    # Fila de Totales
+    data.append([
+        Paragraph("<b>TOTAL</b>", styles['Normal']),
+        '', '', '', '',  # Celdas vacías
+        f"Bs{formatear_variable(total_costo_inicial)}",
+        '',
+        f"Bs{formatear_variable(total_costo_actualizado)}",
+        f"Bs{formatear_variable(total_depreciacion_acumulada)}",
+        f"Bs{formatear_variable(total_valor_neto)}"
     ])
+
+    table = Table(data, colWidths=[
+        1.0*inch,  # Descripción
+        0.9*inch,  # Marca
+        0.8*inch,  # Modelo
+        0.8*inch,  # Estado
+        1.1*inch,  # Fecha
+        1.2*inch,  # Costo Inicial
+        1.0*inch,  # Factor de Actualización
+        1.1*inch,  # Costo Actualizado
+        1.2*inch,  # Depreciación Acumulada
+        1.2*inch   # Valor Neto
+    ])
+
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -615,22 +671,35 @@ def financiero():
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -2), 9),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.white),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#ecf0f1')),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#f9f9f9'), colors.white])
+        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.HexColor('#f9f9f9'), colors.white]),
+        # Estilo para la fila TOTAL
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#dfe6e9')),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
     ]))
 
     elements.append(table)
 
+    # Párrafo resumen debajo de la tabla
+    total_paragraph = Paragraph(
+        f"<b>Total de Muebles:</b> {len(muebles)} | "
+        f"<b>Suma Valor Neto:</b> Bs{formatear_variable(total_valor_neto)}",
+        styles['Normal']
+    )
+    elements.append(Spacer(1, 12))
+    elements.append(total_paragraph)
+
+    # Función para numerar las páginas
     def add_page_number(canvas, doc):
         canvas.saveState()
         canvas.setFont('Helvetica', 8)
         canvas.setFillColor(colors.HexColor('#7f8c8d'))
-        canvas.drawString(inch, 0.5*inch, f"Total de muebles: {len(muebles)}")
+        canvas.drawString(inch, 0.5*inch, f"Total de Muebles: {len(muebles)}")
         canvas.drawRightString(landscape(letter)[0] - inch, 0.5*inch, f"Página {doc.page}")
         canvas.setStrokeColor(colors.black)
         canvas.line(inch, inch, 3*inch, inch)
@@ -651,16 +720,6 @@ def financiero():
 def asignacion():
     muebles = Mueble.get_all()
     return muebles_enseres_view.asignacion(muebles)
-
-
-
-
-
-
-
-
-
-
 
 
 @mueble_bp.route('/muebles/imprimir_asignacion', methods=['POST'])
